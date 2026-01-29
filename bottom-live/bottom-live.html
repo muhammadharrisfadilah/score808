@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,11 +22,12 @@
             --white: #ffffff;
             --woodsmoke: #100a10;
             --sepia-black: #2c0000;
+            --accent-green: #6df24b;
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(0deg, rgba(9, 0, 0, 1) 81%, rgba(111, 0, 0, 1) 100%);
+            background: linear-gradient(0deg, rgba(9, 0, 0, 1) 81%, rgb(0, 0, 0) 100%);
             color: var(--white);
             min-height: 100vh;
             overflow-x: hidden;
@@ -58,7 +60,8 @@
             padding: 32px 30px;
         }
 
-        .menu-icon, .search-icon {
+        .menu-icon,
+        .search-icon {
             width: 35px;
             height: 35px;
             cursor: pointer;
@@ -71,7 +74,8 @@
             font-size: 20px;
         }
 
-        .menu-icon:hover, .search-icon:hover {
+        .menu-icon:hover,
+        .search-icon:hover {
             transform: scale(1.05);
             background: rgba(255, 255, 255, 0.15);
         }
@@ -137,8 +141,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         .live-text {
@@ -401,10 +412,62 @@
             transform: translateY(-50%);
         }
 
-         .bottom-nav a {
-        text-decoration: none;
-        color: inherit;
-      }
+        /* Loading Styles */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--accent-green);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            font-size: 12px;
+            color: #888;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .no-live-matches {
+            text-align: center;
+            padding: 40px 20px;
+            background: var(--eerie-black);
+            border-radius: 10px;
+        }
+
+        .no-live-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .no-live-text {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .bottom-nav a {
+            text-decoration: none;
+            color: inherit;
+        }
 
         .bottom-nav {
             position: fixed;
@@ -463,6 +526,7 @@
         }
     </style>
 </head>
+
 <body>
     <header class="header">
         <div class="header-content">
@@ -474,181 +538,457 @@
 
     <main class="main-content">
         <div class="section-title">Featured Match</div>
-        <div class="featured-match" id="featuredMatch" onclick="alert('Open match detail')">
-            <!-- Will be populated by JS -->
+        <div id="featuredMatchContainer">
+            <div class="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">Loading featured match...</div>
+            </div>
         </div>
 
         <div class="all-live-section">
             <div class="section-title">All Live Matches</div>
-            <div class="match-list" id="liveMatchList"></div>
+            <div class="match-list" id="liveMatchList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Loading live matches...</div>
+                </div>
+            </div>
         </div>
     </main>
 
-      <nav class="bottom-nav">
-      <a href="../index.html" class="nav-item active">
-        <div class="nav-icon">🏠</div>
-        <div class="nav-label">Home</div>
-      </a>
-      <a href="bottom-live/bottom-live.html" class="nav-item">
-        <div class="nav-icon">📡</div>
-        <div class="nav-label">Live</div>
-      </a>
-      <a href="bottom-league/league.html" class="nav-item">
-        <div class="nav-icon">🏆</div>
-        <div class="nav-label">League</div>
-      </a>
-      <a href="bottom-more.html" class="nav-item">
-        <div class="nav-icon">⋯</div>
-        <div class="nav-label">More</div>
-      </a>
+    <nav class="bottom-nav">
+        <a href="../index.html" class="nav-item">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">Home</div>
+        </a>
+        <a href="bottom-live.html" class="nav-item active">
+            <div class="nav-icon">📡</div>
+            <div class="nav-label">Live</div>
+        </a>
+        <a href="../bottom-league/league.html" class="nav-item">
+            <div class="nav-icon">🏆</div>
+            <div class="nav-label">League</div>
+        </a>
+        <a href="../bottom-more.html" class="nav-item">
+            <div class="nav-icon">⋯</div>
+            <div class="nav-label">More</div>
+        </a>
     </nav>
 
     <script>
+        // API Configuration
+        const API_BASE = 'https://www.fotmob.com/api/data';
+        const TOP_LEAGUE_IDS = [47, 87, 55, 54, 53, 130, 102]; // EPL, La Liga, Serie A, Bundesliga, Ligue 1, Liga 1 Indonesia, Champions League
+
+        let liveMatchesData = [];
+        let updateInterval = null;
+        let isLoading = false;
+
+        // Utility functions
         function isImageUrl(str) {
             return str && (str.startsWith('http') || str.startsWith('data:image'));
         }
 
-        function renderIcon(icon) {
+        function renderIcon(icon, fallback = '⚽') {
             if (isImageUrl(icon)) {
-                return `<img src="${icon}" alt="logo">`;
+                return `<img src="${icon}" alt="logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`;
             }
-            return icon;
+            return icon || fallback;
         }
 
-        const featuredMatch = {
-            home: 'Barcelona',
-            away: 'Real Madrid',
-            homeIcon: '🔵',
-            awayIcon: '⚪',
-            homeScore: 0,
-            awayScore: 1,
-            minute: '67\''
-        };
+        function getTodayDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}${month}${day}`;
+        }
 
-        const liveMatches = [
-            { 
-                name: 'Premier League', 
-                icon: '⚽', 
-                matchCount: 3,
-                matches: [
-                    { home: 'Arsenal', away: 'Chelsea', homeIcon: '🔴', awayIcon: '🔵', homeScore: 2, awayScore: 1 },
-                    { home: 'Man City', away: 'Liverpool', homeIcon: '💙', awayIcon: '🔴', homeScore: 1, awayScore: 1 },
-                    { home: 'Tottenham', away: 'Man United', homeIcon: '⚪', awayIcon: '🔴', homeScore: 0, awayScore: 2 }
-                ]
-            },
-            { 
-                name: 'LALIGA', 
-                icon: '🇪🇸', 
-                matchCount: 2,
-                matches: [
-                    { home: 'Atletico', away: 'Sevilla', homeIcon: '🔴', awayIcon: '⚪', homeScore: 3, awayScore: 0 },
-                    { home: 'Valencia', away: 'Villarreal', homeIcon: '🦇', awayIcon: '🟡', homeScore: 1, awayScore: 1 }
-                ]
-            },
-            { 
-                name: 'Serie A', 
-                icon: '🇮🇹', 
-                matchCount: 2,
-                matches: [
-                    { home: 'AC Milan', away: 'Napoli', homeIcon: '🔴', awayIcon: '🔵', homeScore: 2, awayScore: 2 },
-                    { home: 'Inter', away: 'Juventus', homeIcon: '⚫', awayIcon: '⚪', homeScore: 1, awayScore: 0 }
-                ]
-            },
-            { 
-                name: 'Liga 1', 
-                icon: '🇮🇩', 
-                matchCount: 1,
-                matches: [
-                    { home: 'Persija', away: 'Persib', homeIcon: '🔴', awayIcon: '🔵', homeScore: 1, awayScore: 1 }
-                ]
+        function getLeagueImageUrl(leagueId) {
+            return `https://images.fotmob.com/image_resources/logo/leaguelogo/${leagueId}.png`;
+        }
+
+        function getTeamImageUrl(teamId) {
+            return `https://images.fotmob.com/image_resources/logo/teamlogo/${teamId}.png`;
+        }
+
+        function formatTime(timeStr) {
+            if (!timeStr) return '';
+            const parts = timeStr.split(' ');
+            return parts.length > 1 ? parts[1] : timeStr;
+        }
+
+        function getMatchStatus(match) {
+            const status = match.status;
+            if (status.started && !status.finished) {
+                return {
+                    text: status.liveTime?.short || match.time || 'LIVE',
+                    class: 'status-live',
+                    isLive: true,
+                    minute: status.liveTime?.short || match.time || ''
+                };
+            } else if (status.finished) {
+                return { text: 'FT', class: 'status-ft', isLive: false, minute: '' };
+            } else {
+                return {
+                    text: formatTime(match.time),
+                    class: 'status-upcoming',
+                    isLive: false,
+                    minute: ''
+                };
             }
-        ];
+        }
 
-        function renderFeaturedMatch() {
-            const container = document.getElementById('featuredMatch');
+        // Fetch live matches from API
+        async function fetchLiveMatches() {
+            if (isLoading) return;
+
+            try {
+                isLoading = true;
+                const dateStr = getTodayDate();
+
+                const response = await fetch(`${API_BASE}/matches?date=${dateStr}&timezone=Asia%2FBangkok&ccode3=IDN`, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.leagues) {
+                    // Filter only live matches (started but not finished)
+                    const liveLeagues = data.leagues.map(league => {
+                        if (!league.matches) return null;
+
+                        const liveMatches = league.matches.filter(match =>
+                            match.status?.started && !match.status?.finished
+                        );
+
+                        if (liveMatches.length === 0) return null;
+
+                        return {
+                            ...league,
+                            matches: liveMatches
+                        };
+                    }).filter(league => league !== null);
+
+                    liveMatchesData = liveLeagues;
+                    return liveLeagues;
+                } else {
+                    return [];
+                }
+            } catch (error) {
+                console.error('Error loading live matches:', error);
+                return [];
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        // Select featured match (most important live match)
+        function selectFeaturedMatch(leagues) {
+            if (!leagues || leagues.length === 0) return null;
+
+            // Priority: Top leagues first
+            for (const league of leagues) {
+                if (TOP_LEAGUE_IDS.includes(parseInt(league.id)) && league.matches && league.matches.length > 0) {
+                    return {
+                        match: league.matches[0],
+                        leagueName: league.name,
+                        leagueId: league.id
+                    };
+                }
+            }
+
+            // If no top league matches, return first available live match
+            for (const league of leagues) {
+                if (league.matches && league.matches.length > 0) {
+                    return {
+                        match: league.matches[0],
+                        leagueName: league.name,
+                        leagueId: league.id
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        // Render featured match
+        function renderFeaturedMatch(featuredData) {
+            const container = document.getElementById('featuredMatchContainer');
+
+            if (!featuredData) {
+                container.innerHTML = `
+                    <div class="no-live-matches">
+                        <div class="no-live-icon">📺</div>
+                        <div class="no-live-text">No featured live match available</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const { match, leagueName, leagueId } = featuredData;
+            const status = getMatchStatus(match);
+
             container.innerHTML = `
-                <div class="featured-header">
-                    <div class="live-dot"></div>
-                    <div class="live-text">LIVE ${featuredMatch.minute}</div>
-                </div>
-                <div class="featured-content">
-                    <div class="play-icon">▶️</div>
-                    <div class="watch-now">Watch Live Now</div>
-                </div>
-                <div class="featured-teams">
-                    <div class="featured-team">
-                        <div class="featured-logo">${renderIcon(featuredMatch.homeIcon)}</div>
-                        <div class="featured-name">${featuredMatch.home}</div>
+                <div class="featured-match" onclick="viewMatchDetail('${match.id}')">
+                    <div class="featured-header">
+                        <div class="live-dot"></div>
+                        <div class="live-text">LIVE ${status.minute}</div>
                     </div>
-                    <div class="featured-score">
-                        ${featuredMatch.homeScore} - ${featuredMatch.awayScore}
+                    <div class="featured-content">
+                        <div class="play-icon">▶️</div>
+                        <div class="watch-now">Watch Live Now</div>
                     </div>
-                    <div class="featured-team">
-                        <div class="featured-logo">${renderIcon(featuredMatch.awayIcon)}</div>
-                        <div class="featured-name">${featuredMatch.away}</div>
+                    <div class="featured-teams">
+                        <div class="featured-team">
+                            <div class="featured-logo">
+                                ${renderIcon(getTeamImageUrl(match.home.id), '🔴')}
+                            </div>
+                            <div class="featured-name">${match.home.name}</div>
+                        </div>
+                        <div class="featured-score">
+                            ${match.home.score !== undefined ? match.home.score : '0'} - ${match.away.score !== undefined ? match.away.score : '0'}
+                        </div>
+                        <div class="featured-team">
+                            <div class="featured-logo">
+                                ${renderIcon(getTeamImageUrl(match.away.id), '🔵')}
+                            </div>
+                            <div class="featured-name">${match.away.name}</div>
+                        </div>
                     </div>
                 </div>
             `;
         }
 
-        function renderLiveMatches() {
+        // Render all live matches
+        function renderLiveMatches(leagues) {
             const container = document.getElementById('liveMatchList');
-            container.innerHTML = liveMatches.map((league, index) => `
-                <div class="match-item" id="live-${index}">
-                    <div class="match-item-header" onclick="toggleMatchDetails(${index})">
-                        <div class="match-league-info">
-                            <div class="league-badge">${renderIcon(league.icon)}</div>
-                            <div class="league-info-text">${league.name}</div>
-                        </div>
-                        <div class="match-actions">
-                            <div class="match-count">${league.matchCount}</div>
-                            <div class="expand-icon">▼</div>
-                        </div>
+
+            if (!leagues || leagues.length === 0) {
+                container.innerHTML = `
+                    <div class="no-live-matches">
+                        <div class="no-live-icon">⚽</div>
+                        <div class="no-live-text">No live matches at the moment</div>
                     </div>
-                    <div class="match-details">
-                        ${league.matches.map(match => `
-                            <div class="detail-match" style="position: relative;">
-                                <div class="match-team-section">
-                                    <div class="team-logo-circle">${renderIcon(match.homeIcon)}</div>
-                                    <div class="team-name-detail">${match.home}</div>
+                `;
+                return;
+            }
+
+            container.innerHTML = leagues.map((league, index) => {
+                if (!league.matches || league.matches.length === 0) return '';
+
+                return `
+                    <div class="match-item" id="live-${index}">
+                        <div class="match-item-header" onclick="toggleMatchDetails(${index})">
+                            <div class="match-league-info">
+                                <div class="league-badge">
+                                    ${renderIcon(getLeagueImageUrl(league.id), '🏆')}
                                 </div>
-                                <div class="match-center">
-                                    <div class="match-score">${match.homeScore} - ${match.awayScore}</div>
-                                    <div class="match-status">live</div>
-                                </div>
-                                <div class="match-team-section" style="flex-direction: row-reverse;">
-                                    <div class="team-logo-circle">${renderIcon(match.awayIcon)}</div>
-                                    <div class="team-name-detail" style="text-align: right;">${match.away}</div>
-                                </div>
-                                <div class="live-indicator"></div>
+                                <div class="league-info-text">${league.name}</div>
                             </div>
-                        `).join('')}
+                            <div class="match-actions">
+                                <div class="match-count">${league.matches.length}</div>
+                                <div class="expand-icon">▼</div>
+                            </div>
+                        </div>
+                        <div class="match-details">
+                            ${league.matches.map(match => {
+                    const status = getMatchStatus(match);
+                    return `
+                                    <div class="detail-match" onclick="viewMatchDetail('${match.id}')" style="position: relative;">
+                                        <div class="match-team-section">
+                                            <div class="team-logo-circle">
+                                                ${renderIcon(getTeamImageUrl(match.home.id), '🔴')}
+                                            </div>
+                                            <div class="team-name-detail">${match.home.name}</div>
+                                        </div>
+                                        <div class="match-center">
+                                            <div class="match-score">${match.home.score !== undefined ? match.home.score : '0'} - ${match.away.score !== undefined ? match.away.score : '0'}</div>
+                                            <div class="match-status">${status.text}</div>
+                                        </div>
+                                        <div class="match-team-section" style="flex-direction: row-reverse;">
+                                            <div class="team-logo-circle">
+                                                ${renderIcon(getTeamImageUrl(match.away.id), '🔵')}
+                                            </div>
+                                            <div class="team-name-detail" style="text-align: right;">${match.away.name}</div>
+                                        </div>
+                                        ${status.isLive ? '<div class="live-indicator"></div>' : ''}
+                                    </div>
+                                `;
+                }).join('')}
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
+        // Toggle match details
         function toggleMatchDetails(index) {
             const element = document.getElementById(`live-${index}`);
             element.classList.toggle('expanded');
         }
 
-        function navigate(page) {
-            window.location.href = page;
+        // Replace the existing viewMatchDetail function with this:
+function viewMatchDetail(matchId) {
+    // Get the match data from our current live matches
+    let matchData = null;
+    let leagueId = '';
+    let leagueName = '';
+    
+    // Search for the match in our current live matches data
+    for (const league of liveMatchesData) {
+        const match = league.matches?.find(m => m.id === matchId);
+        if (match) {
+            matchData = match;
+            leagueId = league.id;
+            leagueName = league.name;
+            break;
+        }
+    }
+    
+    // If match found, redirect to detail page
+    if (matchData) {
+        // Encode data to pass via URL
+        const encodedData = encodeURIComponent(JSON.stringify({
+            matchId: matchId,
+            homeTeam: {
+                id: matchData.home.id,
+                name: matchData.home.name,
+                score: matchData.home.score || 0
+            },
+            awayTeam: {
+                id: matchData.away.id,
+                name: matchData.away.name,
+                score: matchData.away.score || 0
+            },
+            league: {
+                id: leagueId,
+                name: leagueName
+            },
+            status: matchData.status,
+            time: matchData.time
+        }));
+        
+        // Redirect to match detail page
+        window.location.href = `live-detail.html?data=${encodedData}`;
+    } else {
+        // If match not in our current data, still try to load from API
+        window.location.href = `live-detail.html?matchId=${matchId}`;
+    }
+}
+
+// Also update the renderMatchCard function to use match.id properly:
+function renderMatchCard(match, index) {
+    const status = getMatchStatus(match);
+    const homeScore = match.home.score !== undefined ? match.home.score : '0';
+    const awayScore = match.away.score !== undefined ? match.away.score : '0';
+    
+    return `
+        <div class="detail-match" onclick="viewMatchDetail('${match.id}')">
+            <div class="match-team-section">
+                <div class="team-logo-circle">
+                    ${renderIcon(getTeamImageUrl(match.home.id), '🔴')}
+                </div>
+                <div class="team-name-detail">${match.home.name}</div>
+            </div>
+            <div class="match-center">
+                <div class="match-score">${status.isLive || status.text === 'FT' ? homeScore + ' - ' + awayScore : status.text}</div>
+                <div class="match-status ${status.class}">${status.text}</div>
+            </div>
+            <div class="match-team-section" style="flex-direction: row-reverse;">
+                <div class="team-logo-circle">
+                    ${renderIcon(getTeamImageUrl(match.away.id), '🔵')}
+                </div>
+                <div class="team-name-detail" style="text-align: right;">${match.away.name}</div>
+            </div>
+            ${status.isLive ? '<div class="live-indicator"></div>' : ''}
+        </div>
+    `;
+}
+
+// Update renderFeaturedMatch to pass correct match ID:
+function renderFeaturedMatch(featuredData) {
+    const container = document.getElementById('featuredMatchContainer');
+    
+    if (!featuredData) {
+        container.innerHTML = `
+            <div class="no-live-matches">
+                <div class="no-live-icon">📺</div>
+                <div class="no-live-text">No featured live match available</div>
+            </div>
+        `;
+        return;
+    }
+    
+    const { match, leagueName, leagueId } = featuredData;
+    const status = getMatchStatus(match);
+    
+    container.innerHTML = `
+        <div class="featured-match" onclick="viewMatchDetail('${match.id}')">
+            <div class="featured-header">
+                <div class="live-dot"></div>
+                <div class="live-text">LIVE ${status.minute}</div>
+            </div>
+            <div class="featured-content">
+                <div class="play-icon">▶️</div>
+                <div class="watch-now">Watch Live Now</div>
+            </div>
+            <div class="featured-teams">
+                <div class="featured-team">
+                    <div class="featured-logo">
+                        ${renderIcon(getTeamImageUrl(match.home.id), '🔴')}
+                    </div>
+                    <div class="featured-name">${match.home.name}</div>
+                </div>
+                <div class="featured-score">
+                    ${match.home.score !== undefined ? match.home.score : '0'} - ${match.away.score !== undefined ? match.away.score : '0'}
+                </div>
+                <div class="featured-team">
+                    <div class="featured-logo">
+                        ${renderIcon(getTeamImageUrl(match.away.id), '🔵')}
+                    </div>
+                    <div class="featured-name">${match.away.name}</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+        // Load and render all live data
+        async function loadLiveData() {
+            try {
+                const liveLeagues = await fetchLiveMatches();
+                const featuredMatch = selectFeaturedMatch(liveLeagues);
+
+                renderFeaturedMatch(featuredMatch);
+                renderLiveMatches(liveLeagues);
+            } catch (error) {
+                console.error('Error loading live data:', error);
+            }
         }
 
-        renderFeaturedMatch();
-        renderLiveMatches();
+        // Initialize
+        async function init() {
+            await loadLiveData();
 
-        // Simulate live score updates
-        setInterval(() => {
-            // Random update featured match score
-            if (Math.random() > 0.7) {
-                featuredMatch.homeScore += Math.random() > 0.5 ? 1 : 0;
-                featuredMatch.awayScore += Math.random() > 0.5 ? 1 : 0;
-                renderFeaturedMatch();
-            }
-        }, 10000);
+            // Auto-refresh every 15 seconds for live matches
+            if (updateInterval) clearInterval(updateInterval);
+            updateInterval = setInterval(loadLiveData, 15000);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (updateInterval) clearInterval(updateInterval);
+        });
     </script>
 </body>
+
 </html>
