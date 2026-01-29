@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Matches</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --black: #000000;
+            --black-2: #090000;
+            --broom: #fff212;
+            --ecstasy: #f97316;
+            --eerie-black: #1d1d1d;
+            --licorice: #191616;
+            --white: #ffffff;
+            --woodsmoke: #100a10;
+            --sepia-black: #2c0000;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(0deg, rgba(9, 0, 0, 1) 81%, rgba(111, 0, 0, 1) 100%);
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+            margin: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        html {
+            overflow-x: hidden;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            height: 98px;
+            z-index: 100;
+            background: linear-gradient(180deg, rgba(111, 0, 0, 1) 0%, rgba(9, 0, 0, 1) 100%);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 32px 30px;
+        }
+
+        .menu-icon, .search-icon {
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .menu-icon:hover, .search-icon:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .logo {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--white);
+        }
+
+        .main-content {
+            margin-top: 98px;
+            margin-bottom: 0;
+            padding: 20px 15px 80px;
+            height: calc(100vh - 98px);
+            overflow-y: scroll;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        /* Featured Match Card */
+        .featured-match {
+            background: var(--woodsmoke);
+            border-radius: 12px;
+            padding: 0;
+            margin-bottom: 30px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s;
+            position: relative;
+        }
+
+        .featured-match:hover {
+            transform: translateY(-3px);
+        }
+
+        .featured-header {
+            padding: 12px 15px;
+            background: var(--ecstasy);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .live-text {
+            font-size: 11px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .featured-content {
+            padding: 20px 15px;
+            text-align: center;
+        }
+
+        .play-icon {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 15px;
+            font-size: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.8;
+        }
+
+        .watch-now {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--white);
+        }
+
+        .featured-teams {
+            background: var(--sepia-black);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .featured-team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .featured-logo {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 35px;
+        }
+
+        .featured-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .featured-name {
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .featured-score {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* All Live Matches */
+        .all-live-section {
+            margin-top: 30px;
+        }
+
+        .match-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .match-item {
+            background: var(--eerie-black);
+            border-radius: 10px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .match-item:hover {
+            background: #252525;
+        }
+
+        .match-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .match-league-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .league-badge {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .league-badge img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .league-badge span {
+            font-size: 14px;
+        }
+
+        .league-info-text {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .match-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .match-count {
+            background: var(--broom);
+            color: var(--black);
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .expand-icon {
+            font-size: 10px;
+            transition: transform 0.3s;
+            color: var(--white);
+        }
+
+        .match-item.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .match-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .match-item.expanded .match-details {
+            max-height: 800px;
+            margin-top: 15px;
+        }
+
+        .detail-match {
+            padding: 15px 12px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            position: relative;
+        }
+
+        .detail-match:last-child {
+            margin-bottom: 0;
+        }
+
+        .match-team-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .team-logo-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .team-logo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .team-name-detail {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        .match-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            min-width: 80px;
+        }
+
+        .match-score {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--white);
+            letter-spacing: 3px;
+        }
+
+        .match-status {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 8px;
+            color: var(--white);
+            background: #ff0000;
+            animation: pulse 2s infinite;
+        }
+
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            background: #ff0000;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+         .bottom-nav a {
+        text-decoration: none;
+        color: inherit;
+      }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            height: 70px;
+            background: var(--licorice);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            padding: 0 10px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            padding: 8px 12px;
+        }
+
+        .nav-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-label {
+            font-size: 9px;
+            font-weight: 400;
+            color: var(--white);
+        }
+
+        .nav-item.active .nav-label {
+            color: var(--broom);
+            font-weight: 700;
+        }
+
+        @media (min-width: 431px) {
+            body {
+                box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="menu-icon" onclick="alert('Menu')">☰</div>
+            <div class="logo">LIVESCORE</div>
+            <div class="search-icon" onclick="alert('Search')">🔍</div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="section-title">Featured Match</div>
+        <div class="featured-match" id="featuredMatch" onclick="alert('Open match detail')">
+            <!-- Will be populated by JS -->
+        </div>
+
+        <div class="all-live-section">
+            <div class="section-title">All Live Matches</div>
+            <div class="match-list" id="liveMatchList"></div>
+        </div>
+    </main>
+
+      <nav class="bottom-nav">
+      <a href="../index.html" class="nav-item active">
+        <div class="nav-icon">🏠</div>
+        <div class="nav-label">Home</div>
+      </a>
+      <a href="bottom-live/bottom-live.html" class="nav-item">
+        <div class="nav-icon">📡</div>
+        <div class="nav-label">Live</div>
+      </a>
+      <a href="bottom-league/league.html" class="nav-item">
+        <div class="nav-icon">🏆</div>
+        <div class="nav-label">League</div>
+      </a>
+      <a href="bottom-more.html" class="nav-item">
+        <div class="nav-icon">⋯</div>
+        <div class="nav-label">More</div>
+      </a>
+    </nav>
+
+    <script>
+        function isImageUrl(str) {
+            return str && (str.startsWith('http') || str.startsWith('data:image'));
+        }
+
+        function renderIcon(icon) {
+            if (isImageUrl(icon)) {
+                return `<img src="${icon}" alt="logo">`;
+            }
+            return icon;
+        }
+
+        const featuredMatch = {
+            home: 'Barcelona',
+            away: 'Real Madrid',
+            homeIcon: '🔵',
+            awayIcon: '⚪',
+            homeScore: 0,
+            awayScore: 1,
+            minute: '67\''
+        };
+
+        const liveMatches = [
+            { 
+                name: 'Premier League', 
+                icon: '⚽', 
+                matchCount: 3,
+                matches: [
+                    { home: 'Arsenal', away: 'Chelsea', homeIcon: '🔴', awayIcon: '🔵', homeScore: 2, awayScore: 1 },
+                    { home: 'Man City', away: 'Liverpool', homeIcon: '💙', awayIcon: '🔴', homeScore: 1, awayScore: 1 },
+                    { home: 'Tottenham', away: 'Man United', homeIcon: '⚪', awayIcon: '🔴', homeScore: 0, awayScore: 2 }
+                ]
+            },
+            { 
+                name: 'LALIGA', 
+                icon: '🇪🇸', 
+                matchCount: 2,
+                matches: [
+                    { home: 'Atletico', away: 'Sevilla', homeIcon: '🔴', awayIcon: '⚪', homeScore: 3, awayScore: 0 },
+                    { home: 'Valencia', away: 'Villarreal', homeIcon: '🦇', awayIcon: '🟡', homeScore: 1, awayScore: 1 }
+                ]
+            },
+            { 
+                name: 'Serie A', 
+                icon: '🇮🇹', 
+                matchCount: 2,
+                matches: [
+                    { home: 'AC Milan', away: 'Napoli', homeIcon: '🔴', awayIcon: '🔵', homeScore: 2, awayScore: 2 },
+                    { home: 'Inter', away: 'Juventus', homeIcon: '⚫', awayIcon: '⚪', homeScore: 1, awayScore: 0 }
+                ]
+            },
+            { 
+                name: 'Liga 1', 
+                icon: '🇮🇩', 
+                matchCount: 1,
+                matches: [
+                    { home: 'Persija', away: 'Persib', homeIcon: '🔴', awayIcon: '🔵', homeScore: 1, awayScore: 1 }
+                ]
+            }
+        ];
+
+        function renderFeaturedMatch() {
+            const container = document.getElementById('featuredMatch');
+            container.innerHTML = `
+                <div class="featured-header">
+                    <div class="live-dot"></div>
+                    <div class="live-text">LIVE ${featuredMatch.minute}</div>
+                </div>
+                <div class="featured-content">
+                    <div class="play-icon">▶️</div>
+                    <div class="watch-now">Watch Live Now</div>
+                </div>
+                <div class="featured-teams">
+                    <div class="featured-team">
+                        <div class="featured-logo">${renderIcon(featuredMatch.homeIcon)}</div>
+                        <div class="featured-name">${featuredMatch.home}</div>
+                    </div>
+                    <div class="featured-score">
+                        ${featuredMatch.homeScore} - ${featuredMatch.awayScore}
+                    </div>
+                    <div class="featured-team">
+                        <div class="featured-logo">${renderIcon(featuredMatch.awayIcon)}</div>
+                        <div class="featured-name">${featuredMatch.away}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderLiveMatches() {
+            const container = document.getElementById('liveMatchList');
+            container.innerHTML = liveMatches.map((league, index) => `
+                <div class="match-item" id="live-${index}">
+                    <div class="match-item-header" onclick="toggleMatchDetails(${index})">
+                        <div class="match-league-info">
+                            <div class="league-badge">${renderIcon(league.icon)}</div>
+                            <div class="league-info-text">${league.name}</div>
+                        </div>
+                        <div class="match-actions">
+                            <div class="match-count">${league.matchCount}</div>
+                            <div class="expand-icon">▼</div>
+                        </div>
+                    </div>
+                    <div class="match-details">
+                        ${league.matches.map(match => `
+                            <div class="detail-match" style="position: relative;">
+                                <div class="match-team-section">
+                                    <div class="team-logo-circle">${renderIcon(match.homeIcon)}</div>
+                                    <div class="team-name-detail">${match.home}</div>
+                                </div>
+                                <div class="match-center">
+                                    <div class="match-score">${match.homeScore} - ${match.awayScore}</div>
+                                    <div class="match-status">live</div>
+                                </div>
+                                <div class="match-team-section" style="flex-direction: row-reverse;">
+                                    <div class="team-logo-circle">${renderIcon(match.awayIcon)}</div>
+                                    <div class="team-name-detail" style="text-align: right;">${match.away}</div>
+                                </div>
+                                <div class="live-indicator"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleMatchDetails(index) {
+            const element = document.getElementById(`live-${index}`);
+            element.classList.toggle('expanded');
+        }
+
+        function navigate(page) {
+            window.location.href = page;
+        }
+
+        renderFeaturedMatch();
+        renderLiveMatches();
+
+        // Simulate live score updates
+        setInterval(() => {
+            // Random update featured match score
+            if (Math.random() > 0.7) {
+                featuredMatch.homeScore += Math.random() > 0.5 ? 1 : 0;
+                featuredMatch.awayScore += Math.random() > 0.5 ? 1 : 0;
+                renderFeaturedMatch();
+            }
+        }, 10000);
+    </script>
+</body>
+</html>

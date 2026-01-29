@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leagues</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --black: #000000;
+            --black-2: #090000;
+            --broom: #fff212;
+            --eerie-black: #1d1d1d;
+            --licorice: #191616;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(0deg, rgba(9, 0, 0, 1) 81%, rgba(111, 0, 0, 1) 100%);
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+            margin: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        html {
+            overflow-x: hidden;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            height: 98px;
+            z-index: 100;
+            background: linear-gradient(180deg, rgba(111, 0, 0, 1) 0%, rgba(9, 0, 0, 1) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 32px 30px;
+        }
+
+        .menu-icon, .search-icon {
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .menu-icon:hover, .search-icon:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .logo {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--white);
+        }
+
+        .main-content {
+            margin-top: 98px;
+            margin-bottom: 0;
+            padding: 20px 15px 80px;
+            height: calc(100vh - 98px);
+            overflow-y: scroll;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .top-leagues-section {
+            margin-bottom: 30px;
+        }
+
+        .top-leagues-grid {
+            background: var(--eerie-black);
+            border-radius: 10px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .league-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .league-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .league-icon {
+            width: 32px;
+            height: 32px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .league-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .league-icon span {
+            font-size: 20px;
+        }
+
+        .league-name {
+            font-size: 13px;
+            font-weight: 700;
+            flex: 1;
+        }
+
+        .all-leagues-section {
+            margin-top: 30px;
+        }
+
+        .league-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .league-list-item {
+            background: var(--eerie-black);
+            border-radius: 10px;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .league-list-item:hover {
+            background: #252525;
+            transform: translateX(3px);
+        }
+
+        .league-list-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .league-list-icon {
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .league-list-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .league-list-icon span {
+            font-size: 16px;
+        }
+
+        .league-list-name {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .league-arrow {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            height: 70px;
+            background: var(--licorice);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            padding: 0 10px;
+        }
+
+        .bottom-nav a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            padding: 8px 12px;
+        }
+
+        .nav-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-label {
+            font-size: 9px;
+            font-weight: 400;
+            color: var(--white);
+        }
+
+        .nav-item.active .nav-label {
+            color: var(--broom);
+            font-weight: 700;
+        }
+
+        @media (min-width: 431px) {
+            body {
+                box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="menu-icon" onclick="alert('Menu')">☰</div>
+        <div class="logo">LIVESCORE</div>
+        <div class="search-icon" onclick="alert('Search')">🔍</div>
+    </header>
+
+    <main class="main-content">
+        <div class="top-leagues-section">
+            <div class="section-title">Top League</div>
+            <div class="top-leagues-grid" id="topLeagues"></div>
+        </div>
+
+        <div class="all-leagues-section">
+            <div class="section-title">All League</div>
+            <div class="league-list" id="allLeagues"></div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">Home</div>
+        </a>
+        <a href="live.html" class="nav-item">
+            <div class="nav-icon">📡</div>
+            <div class="nav-label">Live</div>
+        </a>
+        <a href="league.html" class="nav-item active">
+            <div class="nav-icon">🏆</div>
+            <div class="nav-label">League</div>
+        </a>
+        <a href="more.html" class="nav-item">
+            <div class="nav-icon">⋯</div>
+            <div class="nav-label">More</div>
+        </a>
+    </nav>
+
+    <script>
+        function isImageUrl(str) {
+            return str && (str.startsWith('http') || str.startsWith('data:image'));
+        }
+
+        function renderIcon(icon) {
+            if (isImageUrl(icon)) {
+                return `<img src="${icon}" alt="logo">`;
+            }
+            return `<span>${icon}</span>`;
+        }
+
+        const topLeagues = [
+            { name: 'Premier League', icon: '⚽', id: 'epl' },
+            { name: 'LALIGA', icon: '🇪🇸', id: 'laliga' },
+            { name: 'Serie A', icon: '🇮🇹', id: 'seriea' },
+            { name: 'BRI League', icon: '🇮🇩', id: 'liga1' },
+            { name: 'Eredivisie', icon: '🇳🇱', id: 'eredivisie' },
+            { name: 'Champions League', icon: '🏆', id: 'ucl' },
+            { name: 'Bundesliga', icon: '🇩🇪', id: 'bundesliga' }
+        ];
+
+        const allLeagues = [
+            { name: 'Argentina', icon: '🇦🇷' },
+            { name: 'America', icon: '🌎' },
+            { name: 'Indonesia', icon: '🇮🇩' },
+            { name: 'Spanyol', icon: '🇪🇸' },
+            { name: 'England', icon: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+            { name: 'France', icon: '🇫🇷' },
+            { name: 'Germany', icon: '🇩🇪' },
+            { name: 'Italy', icon: '🇮🇹' },
+            { name: 'Portugal', icon: '🇵🇹' },
+            { name: 'Netherlands', icon: '🇳🇱' },
+            { name: 'Belgium', icon: '🇧🇪' },
+            { name: 'Turkey', icon: '🇹🇷' },
+            { name: 'Brazil', icon: '🇧🇷' },
+            { name: 'Mexico', icon: '🇲🇽' },
+            { name: 'Japan', icon: '🇯🇵' },
+            { name: 'South Korea', icon: '🇰🇷' },
+            { name: 'Saudi Arabia', icon: '🇸🇦' },
+            { name: 'Australia', icon: '🇦🇺' }
+        ];
+
+        function renderTopLeagues() {
+            const container = document.getElementById('topLeagues');
+            container.innerHTML = topLeagues.map(league => `
+                <div class="league-item" onclick="openLeague('${league.id}')">
+                    <div class="league-icon">${renderIcon(league.icon)}</div>
+                    <div class="league-name">${league.name}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderAllLeagues() {
+            const container = document.getElementById('allLeagues');
+            container.innerHTML = allLeagues.map(league => `
+                <div class="league-list-item" onclick="openCountryLeague('${league.name}')">
+                    <div class="league-list-left">
+                        <div class="league-list-icon">${renderIcon(league.icon)}</div>
+                        <div class="league-list-name">${league.name}</div>
+                    </div>
+                    <div class="league-arrow">›</div>
+                </div>
+            `).join('');
+        }
+
+        function openLeague(leagueId) {
+            alert(`Opening ${leagueId} details...\nWill show: Standings, Top Scorers, Fixtures`);
+        }
+
+        function openCountryLeague(country) {
+            alert(`Opening leagues from ${country}...`);
+        }
+
+        renderTopLeagues();
+        renderAllLeagues();
+    </script>
+</body>
+</html>

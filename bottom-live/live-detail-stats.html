@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Match Details - Statistics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: white;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #000000;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 60px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #8B0000 0%, #5C0000 100%);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-btn {
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            text-decoration: none;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            flex: 1;
+        }
+
+        /* Live Video Section */
+        .live-video {
+            background: #1a1a1a;
+            aspect-ratio: 16/9;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .live-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background-color: #ff6b00;
+            border-radius: 5px;
+            padding: 6px 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .live-indicator {
+            width: 6px;
+            height: 6px;
+            background-color: white;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .play-button {
+            width: 60px;
+            height: 60px;
+            background-color: #ff6b00;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .play-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Match Info */
+        .match-info {
+            background: linear-gradient(180deg, #2a0000 0%, #1a0000 100%);
+            padding: 20px;
+        }
+
+        .league-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .league-logo {
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .league-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .teams-score {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            margin-bottom: 15px;
+        }
+
+        .team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .team-logo {
+            width: 50px;
+            height: 50px;
+            font-size: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .team-name {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .score {
+            font-size: 28px;
+            font-weight: 700;
+            padding: 0 30px;
+        }
+
+        .scorers {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .scorer {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .ball-icon {
+            font-size: 10px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: #1a0000;
+            border-bottom: 1px solid #333;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #888;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+            text-decoration: none;
+        }
+
+        .tab.active {
+            color: white;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #ff6b00;
+        }
+
+        /* Statistics Content */
+        .stats-content {
+            padding: 20px 16px;
+            background: #000000;
+        }
+
+        .stats-card {
+            background: rgba(26, 26, 26, 0.5);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .stats-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+
+        .stats-team {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stats-team-logo {
+            width: 32px;
+            height: 32px;
+            font-size: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stats-team-name {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .stat-row {
+            margin-bottom: 20px;
+        }
+
+        .stat-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .stat-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .stat-value-left {
+            color: white;
+            font-weight: 600;
+        }
+
+        .stat-value-right {
+            color: white;
+            font-weight: 600;
+        }
+
+        .stat-bars {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #333;
+        }
+
+        .stat-bar-left {
+            height: 100%;
+            background: linear-gradient(90deg, #e63946 0%, #dc2f3c 100%);
+            transition: width 0.5s ease;
+        }
+
+        .stat-bar-right {
+            height: 100%;
+            background: linear-gradient(90deg, #555 0%, #666 100%);
+            transition: width 0.5s ease;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0a0a0a;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 10px;
+            border-top: 1px solid #222;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            color: #888;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: #b8a600;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 340px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .modal-info {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .modal-btn {
+            background: #ff6b00;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .modal-btn:active {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <a href="#" class="back-btn" onclick="goBack(event)">←</a>
+            <div class="header-title">Match Details</div>
+        </div>
+
+        <!-- Live Video Section -->
+        <div class="live-video">
+            <div class="live-badge">
+                <div class="live-indicator"></div>
+                <span>LIVE 68'</span>
+            </div>
+            <div class="play-button" onclick="playVideo()">▶</div>
+        </div>
+
+        <!-- Match Info -->
+        <div class="match-info">
+            <div class="league-badge">
+                <div class="league-logo">LL</div>
+                <div class="league-name">LALIGA</div>
+            </div>
+            <div class="teams-score">
+                <div class="team">
+                    <div class="team-logo">🔵🔴</div>
+                    <div class="team-name">Barcelona</div>
+                </div>
+                <div class="score">1 - 1</div>
+                <div class="team">
+                    <div class="team-logo">⚪</div>
+                    <div class="team-name">Real Madrid</div>
+                </div>
+            </div>
+            <div class="scorers">
+                <div class="scorer">
+                    <span>Yamal 55'</span>
+                    <span class="ball-icon">⚽</span>
+                </div>
+                <div class="scorer">
+                    <span class="ball-icon">⚽</span>
+                    <span>Mbappé 50'</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <a href="#" class="tab active" onclick="changeTab(event, 'stats')">Statistic</a>
+            <a href="#" class="tab" onclick="changeTab(event, 'lineup')">Lineup</a>
+            <a href="#" class="tab" onclick="changeTab(event, 'table')">Table</a>
+        </div>
+
+        <!-- Statistics Content -->
+        <div class="stats-content">
+            <div class="stats-card">
+                <div class="stats-header">
+                    <div class="stats-team">
+                        <div class="stats-team-logo">🔵🔴</div>
+                        <div class="stats-team-name">Barcelona</div>
+                    </div>
+                    <div class="stats-team">
+                        <div class="stats-team-name">Real Madrid</div>
+                        <div class="stats-team-logo">⚪</div>
+                    </div>
+                </div>
+
+                <!-- Possession -->
+                <div class="stat-row">
+                    <div class="stat-label">
+                        <span class="stat-value-left">58</span>
+                        <span>Possession</span>
+                        <span class="stat-value-right">42</span>
+                    </div>
+                    <div class="stat-bars">
+                        <div class="stat-bar-left" style="width: 58%;"></div>
+                        <div class="stat-bar-right" style="width: 42%;"></div>
+                    </div>
+                </div>
+
+                <!-- Shots -->
+                <div class="stat-row">
+                    <div class="stat-label">
+                        <span class="stat-value-left">12</span>
+                        <span>Shots</span>
+                        <span class="stat-value-right">8</span>
+                    </div>
+                    <div class="stat-bars">
+                        <div class="stat-bar-left" style="width: 60%;"></div>
+                        <div class="stat-bar-right" style="width: 40%;"></div>
+                    </div>
+                </div>
+
+                <!-- Shots on Target -->
+                <div class="stat-row">
+                    <div class="stat-label">
+                        <span class="stat-value-left">6</span>
+                        <span>Shots on Target</span>
+                        <span class="stat-value-right">3</span>
+                    </div>
+                    <div class="stat-bars">
+                        <div class="stat-bar-left" style="width: 67%;"></div>
+                        <div class="stat-bar-right" style="width: 33%;"></div>
+                    </div>
+                </div>
+
+                <!-- Corners -->
+                <div class="stat-row">
+                    <div class="stat-label">
+                        <span class="stat-value-left">7</span>
+                        <span>Corners</span>
+                        <span class="stat-value-right">4</span>
+                    </div>
+                    <div class="stat-bars">
+                        <div class="stat-bar-left" style="width: 64%;"></div>
+                        <div class="stat-bar-right" style="width: 36%;"></div>
+                    </div>
+                </div>
+
+                <!-- Fouls -->
+                <div class="stat-row">
+                    <div class="stat-label">
+                        <span class="stat-value-left">8</span>
+                        <span>Fouls</span>
+                        <span class="stat-value-right">12</span>
+                    </div>
+                    <div class="stat-bars">
+                        <div class="stat-bar-left" style="width: 40%;"></div>
+                        <div class="stat-bar-right" style="width: 60%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <a href="#" class="nav-item active" onclick="changeNav(event, 'home')">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">Home</div>
+            </a>
+            <a href="#" class="nav-item" onclick="changeNav(event, 'live')">
+                <div class="nav-icon">📹</div>
+                <div class="nav-label">Live</div>
+            </a>
+            <a href="#" class="nav-item" onclick="changeNav(event, 'league')">
+                <div class="nav-icon">🏆</div>
+                <div class="nav-label">League</div>
+            </a>
+            <a href="#" class="nav-item" onclick="changeNav(event, 'more')">
+                <div class="nav-icon">⋮</div>
+                <div class="nav-label">More</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-info" id="modalInfo"></div>
+            <button class="modal-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function changeNav(e, nav) {
+            e.preventDefault();
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            console.log('Nav:', nav);
+        }
+
+        function changeTab(e, tab) {
+            e.preventDefault();
+            document.querySelectorAll('.tab').forEach(i => i.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            console.log('Tab:', tab);
+        }
+
+        function goBack(e) {
+            e.preventDefault();
+            console.log('Back');
+        }
+
+        function playVideo() {
+            alert('Play video');
+        }
+
+        function showModal(title, info) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalInfo').textContent = info;
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        document.getElementById('modal').onclick = function(e) {
+            if(e.target === this) closeModal();
+        };
+
+        // Animate bars on load
+        window.addEventListener('load', function() {
+            const bars = document.querySelectorAll('.stat-bar-left, .stat-bar-right');
+            bars.forEach((bar, index) => {
+                setTimeout(() => {
+                    bar.style.opacity = '1';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>

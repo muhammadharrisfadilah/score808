@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>League Fixtures</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(180deg, #6f0000 0%, #090000 80%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: white;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 80px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #8B0000 0%, #5C0000 100%);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .menu-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .menu-line {
+            width: 100%;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        /* Tabs */
+        .tabs-section {
+            background: rgba(26, 26, 26, 0.9);
+            margin: 20px 16px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #333;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #888;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+            text-decoration: none;
+        }
+
+        .tab.active {
+            color: white;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #ff6b00;
+        }
+
+        /* Date Navigation */
+        .date-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .nav-arrow {
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.2s;
+        }
+
+        .nav-arrow:active {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .date-range {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Fixtures Content */
+        .fixtures-content {
+            padding: 0 16px 20px;
+        }
+
+        .date-group {
+            margin-bottom: 24px;
+        }
+
+        .date-header {
+            background: rgba(255,255,255,0.05);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .match-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .match-card:active {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .match-teams {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .team-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .team-logo {
+            width: 24px;
+            height: 24px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .team-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .vs-separator {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin: 0 4px;
+        }
+
+        .match-time {
+            text-align: right;
+        }
+
+        .time-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .league-badge {
+            width: 20px;
+            height: 20px;
+            margin-top: 4px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0a0a0a;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 10px;
+            border-top: 1px solid #222;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            color: #888;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: #b8a600;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 340px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .modal-info {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .modal-btn {
+            background: #ff6b00;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .modal-btn:active {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="menu-btn" onclick="toggleMenu()">
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+            </div>
+            <div class="logo">TITIK SPORTS</div>
+        </div>
+
+        <!-- Tabs Section -->
+        <div class="tabs-section">
+            <div class="tabs">
+                <a href="#" class="tab" onclick="changeTab(event, 'table')">Table</a>
+                <a href="#" class="tab" onclick="changeTab(event, 'scorers')">Top Scorers</a>
+                <a href="#" class="tab active" onclick="changeTab(event, 'fixtures')">Fixtures</a>
+            </div>
+
+            <!-- Date Navigation -->
+            <div class="date-nav">
+                <div class="nav-arrow" onclick="prevWeek()">‹</div>
+                <div class="date-range">Jan 5 - Jan 12</div>
+                <div class="nav-arrow" onclick="nextWeek()">›</div>
+            </div>
+
+            <!-- Fixtures Content -->
+            <div class="fixtures-content">
+                <!-- Monday, January 5 -->
+                <div class="date-group">
+                    <div class="date-header">Monday, January 5</div>
+                    
+                    <div class="match-card" onclick="showMatchDetail('Bhayangkara Presisi Indonesia FC vs Dewa United FC', '3:30 PM')">
+                        <div class="match-teams">
+                            <div class="team-info">
+                                <div class="team-logo">⚽</div>
+                                <div class="team-name">Bhayangkara Presisi Indonesia FC</div>
+                            </div>
+                            <span class="vs-separator">vs</span>
+                            <div class="team-info">
+                                <div class="team-logo">⚔️</div>
+                                <div class="team-name">Dewa United FC</div>
+                            </div>
+                        </div>
+                        <div class="match-time">
+                            <div class="time-text">3:30<br>PM</div>
+                            <div class="league-badge">🏆</div>
+                        </div>
+                    </div>
+
+                    <div class="match-card" onclick="showMatchDetail('Persita vs Persib Bandung', '7:00 PM')">
+                        <div class="match-teams">
+                            <div class="team-info">
+                                <div class="team-logo">🔥</div>
+                                <div class="team-name">Persita</div>
+                            </div>
+                            <span class="vs-separator">vs</span>
+                            <div class="team-info">
+                                <div class="team-logo">🔵</div>
+                                <div class="team-name">Persib Bandung</div>
+                            </div>
+                        </div>
+                        <div class="match-time">
+                            <div class="time-text">7:00<br>PM</div>
+                            <div class="league-badge">🏆</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Friday, January 9 -->
+                <div class="date-group">
+                    <div class="date-header">Friday, January 9</div>
+                    
+                    <div class="match-card" onclick="showMatchDetail('Persita vs Borneo Samarinda', '3:30 PM')">
+                        <div class="match-teams">
+                            <div class="team-info">
+                                <div class="team-logo">🟣</div>
+                                <div class="team-name">Persita</div>
+                            </div>
+                            <span class="vs-separator">vs</span>
+                            <div class="team-info">
+                                <div class="team-logo">🔴</div>
+                                <div class="team-name">Borneo Samarinda</div>
+                            </div>
+                        </div>
+                        <div class="match-time">
+                            <div class="time-text">3:30<br>PM</div>
+                            <div class="league-badge">🏆</div>
+                        </div>
+                    </div>
+
+                    <div class="match-card" onclick="showMatchDetail('PSM Makassar vs Bali United FC', '7:00 PM')">
+                        <div class="match-teams">
+                            <div class="team-info">
+                                <div class="team-logo">❤️</div>
+                                <div class="team-name">PSM Makassar</div>
+                            </div>
+                            <span class="vs-separator">vs</span>
+                            <div class="team-info">
+                                <div class="team-logo">🔴</div>
+                                <div class="team-name">Bali United FC</div>
+                            </div>
+                        </div>
+                        <div class="match-time">
+                            <div class="time-text">7:00<br>PM</div>
+                            <div class="league-badge">🏆</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Saturday, January 10 -->
+                <div class="date-group">
+                    <div class="date-header">Saturday, January 10</div>
+                    
+                    <div class="match-card" onclick="showMatchDetail('Persebaya Surabaya vs Malut United', '3:30 PM')">
+                        <div class="match-teams">
+                            <div class="team-info">
+                                <div class="team-logo">🟢</div>
+                                <div class="team-name">Persebaya Surabaya</div>
+                            </div>
+                            <span class="vs-separator">vs</span>
+                            <div class="team-info">
+                                <div class="team-logo">🔴</div>
+                                <div class="team-name">Malut United</div>
+                            </div>
+                        </div>
+                        <div class="match-time">
+                            <div class="time-text">3:30<br>PM</div>
+                            <div class="league-badge">🏆</div>
+                        </div>
+                    </div>
+
+                    <div class="match-card" onclick="showMatchDetail('Madura United vs PSIM Yogyakarta', '7:00 PM')">
+                        <div class="match-teams">
+                            <div class="team-info">
+                                <div class="team-logo">🔴</div>
+                                <div class="team-name">Madura United</div>
+                            </div>
+                            <span class="vs-separator">vs</span>
+                            <div class="team-info">
+                                <div class="team-logo">🔵</div>
+                                <div class="team-name">PSIM Yogyakarta</div>
+                            </div>
+                        </div>
+                        <div class="match-time">
+                            <div class="time-text">7:00<br>PM</div>
+                            <div class="league-badge">🏆</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sunday, January 11 -->
+                <div class="date-group">
+                    <div class="date-header">Sunday, January 11</div>
+                    
+                    <div class="match-card" onclick="showMatchDetail('Arema vs Persik', '3:30 PM')">
+                        <div class="match-teams">
+                            <div class="team-info">
+                                <div class="team-logo">🔵</div>
+                                <div class="team-name">Arema</div>
+                            </div>
+                            <span class="vs-separator">vs</span>
+                            <div class="team-info">
+                                <div class="team-logo">🟠</div>
+                                <div class="team-name">Persik</div>
+                            </div>
+                        </div>
+                        <div class="match-time">
+                            <div class="time-text">3:30<br>PM</div>
+                            <div class="league-badge">🏆</div>
+                        </div>
+                    </div>
+
+                    <div class="match-card" onclick="showMatchDetail('Persib Bandung vs Persija Jakarta', '3:30 PM')">
+                        <div class="match-teams">
+                            <div class="team-info">
+                                <div class="team-logo">🟡</div>
+                                <div class="team-name">Persib Bandung</div>
+                            </div>
+                            <span class="vs-separator">vs</span>
+                            <div class="team-info">
+                                <div class="team-logo">🔴</div>
+                                <div class="team-name">Persija Jakarta</div>
+                            </div>
+                        </div>
+                        <div class="match-time">
+                            <div class="time-text">3:30<br>PM</div>
+                            <div class="league-badge">🏆</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <a href="#" class="nav-item active" onclick="changeNav(event, 'home')">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">Home</div>
+            </a>
+            <a href="#" class="nav-item" onclick="changeNav(event, 'live')">
+                <div class="nav-icon">📹</div>
+                <div class="nav-label">Live</div>
+            </a>
+            <a href="#" class="nav-item" onclick="changeNav(event, 'league')">
+                <div class="nav-icon">🏆</div>
+                <div class="nav-label">League</div>
+            </a>
+            <a href="#" class="nav-item" onclick="changeNav(event, 'more')">
+                <div class="nav-icon">⋮</div>
+                <div class="nav-label">More</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-info" id="modalInfo"></div>
+            <button class="modal-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function changeNav(e, nav) {
+            e.preventDefault();
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            console.log('Nav:', nav);
+        }
+
+        function changeTab(e, tab) {
+            e.preventDefault();
+            document.querySelectorAll('.tab').forEach(i => i.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            console.log('Tab:', tab);
+        }
+
+        function toggleMenu() {
+            alert('Menu opened');
+        }
+
+        function prevWeek() {
+            alert('Previous week');
+        }
+
+        function nextWeek() {
+            alert('Next week');
+        }
+
+        function showMatchDetail(match, time) {
+            document.getElementById('modalTitle').textContent = match;
+            document.getElementById('modalInfo').textContent = `Match scheduled at ${time}`;
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        document.getElementById('modal').onclick = function(e) {
+            if(e.target === this) closeModal();
+        };
+    </script>
+</body>
+</html>

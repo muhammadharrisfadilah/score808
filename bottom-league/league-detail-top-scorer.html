@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>League Top Scorers</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(180deg, #6f0000 0%, #090000 80%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: white;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 80px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #8B0000 0%, #5C0000 100%);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .menu-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .menu-line {
+            width: 100%;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        /* Tabs */
+        .tabs-section {
+            background: rgba(26, 26, 26, 0.9);
+            margin: 20px 16px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #333;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #888;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+            text-decoration: none;
+        }
+
+        .tab.active {
+            color: white;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #ff6b00;
+        }
+
+        /* Scorers Content */
+        .scorers-content {
+            padding: 0 16px 20px;
+        }
+
+        .scorer-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .scorer-card:active {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .scorer-rank {
+            font-size: 18px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.7);
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .scorer-avatar {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #444 0%, #222 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            overflow: hidden;
+        }
+
+        .team-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            border: 2px solid rgba(0,0,0,0.3);
+        }
+
+        .scorer-info {
+            flex: 1;
+        }
+
+        .scorer-name {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .scorer-stats {
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .scorer-goals {
+            font-size: 20px;
+            font-weight: 700;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0a0a0a;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 10px;
+            border-top: 1px solid #222;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            color: #888;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: #b8a600;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 340px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .modal-info {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .modal-btn {
+            background: #ff6b00;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .modal-btn:active {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="menu-btn" onclick="toggleMenu()">
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+            </div>
+            <div class="logo">TITIK SPORTS</div>
+        </div>
+
+        <!-- Tabs Section -->
+        <div class="tabs-section">
+            <div class="tabs">
+                <a href="#" class="tab" onclick="changeTab(event, 'table')">Table</a>
+                <a href="#" class="tab active" onclick="changeTab(event, 'scorers')">Top Scorers</a>
+                <a href="#" class="tab" onclick="changeTab(event, 'fixtures')">Fixtures</a>
+            </div>
+
+            <!-- Scorers Content -->
+            <div class="scorers-content">
+                <!-- Rank 1 -->
+                <div class="scorer-card" onclick="showPlayerDetail('Maxwell', 10, 1)">
+                    <div class="scorer-rank">1</div>
+                    <div class="scorer-avatar">
+                        👤
+                        <div class="team-badge">🔵</div>
+                    </div>
+                    <div class="scorer-info">
+                        <div class="scorer-name">Maxwell</div>
+                        <div class="scorer-stats">Penalty goals: 1</div>
+                    </div>
+                    <div class="scorer-goals">10</div>
+                </div>
+
+                <!-- Rank 2 -->
+                <div class="scorer-card" onclick="showPlayerDetail('Mariano Peralta', 9, 3)">
+                    <div class="scorer-rank">2</div>
+                    <div class="scorer-avatar">
+                        👤
+                        <div class="team-badge">🔵</div>
+                    </div>
+                    <div class="scorer-info">
+                        <div class="scorer-name">Mariano Peralta</div>
+                        <div class="scorer-stats">Penalty goals: 3</div>
+                    </div>
+                    <div class="scorer-goals">9</div>
+                </div>
+
+                <!-- Rank 3 -->
+                <div class="scorer-card" onclick="showPlayerDetail('Dalberto', 9, 4)">
+                    <div class="scorer-rank">3</div>
+                    <div class="scorer-avatar">
+                        👤
+                        <div class="team-badge">🔵</div>
+                    </div>
+                    <div class="scorer-info">
+                        <div class="scorer-name">Dalberto</div>
+                        <div class="scorer-stats">Penalty goals: 4</div>
+                    </div>
+                    <div class="scorer-goals">9</div>
+                </div>
+
+                <!-- Rank 4 -->
+                <div class="scorer-card" onclick="showPlayerDetail('Jose Enrique', 7, 0)">
+                    <div class="scorer-rank">4</div>
+                    <div class="scorer-avatar">
+                        👤
+                        <div class="team-badge">🟡</div>
+                    </div>
+                    <div class="scorer-info">
+                        <div class="scorer-name">Jose Enrique</div>
+                        <div class="scorer-stats">Penalty goals: 0</div>
+                    </div>
+                    <div class="scorer-goals">7</div>
+                </div>
+
+                <!-- Rank 5 -->
+                <div class="scorer-card" onclick="showPlayerDetail('Uillian', 7, 1)">
+                    <div class="scorer-rank">5</div>
+                    <div class="scorer-avatar">
+                        👤
+                        <div class="team-badge">🔵</div>
+                    </div>
+                    <div class="scorer-info">
+                        <div class="scorer-name">Uillian</div>
+                        <div class="scorer-stats">Penalty goals: 1</div>
+                    </div>
+                    <div class="scorer-goals">7</div>
+                </div>
+
+                <!-- Rank 6 -->
+                <div class="scorer-card" onclick="showPlayerDetail('Alex Tanque', 6, 0)">
+                    <div class="scorer-rank">6</div>
+                    <div class="scorer-avatar">
+                        👤
+                        <div class="team-badge">🔴</div>
+                    </div>
+                    <div class="scorer-info">
+                        <div class="scorer-name">Alex Tanque</div>
+                        <div class="scorer-stats">Penalty goals: 0</div>
+                    </div>
+                    <div class="scorer-goals">6</div>
+                </div>
+
+                <!-- Rank 7 -->
+                <div class="scorer-card" onclick="showPlayerDetail('Carlos Henrique Franca Freires', 6, 1)">
+                    <div class="scorer-rank">7</div>
+                    <div class="scorer-avatar">
+                        👤
+                        <div class="team-badge">🔵</div>
+                    </div>
+                    <div class="scorer-info">
+                        <div class="scorer-name">Carlos Henrique Franca Freires</div>
+                        <div class="scorer-stats">Penalty goals: 1</div>
+                    </div>
+                    <div class="scorer-goals">6</div>
+                </div>
+
+                <!-- Rank 7 (tied) -->
+                <div class="scorer-card" onclick="showPlayerDetail('Kodai Tanaka', 6, 1)">
+                    <div class="scorer-rank">7</div>
+                    <div class="scorer-avatar">
+                        👤
+                        <div class="team-badge">🔵</div>
+                    </div>
+                    <div class="scorer-info">
+                        <div class="scorer-name">Kodai Tanaka</div>
+                        <div class="scorer-stats">Penalty goals: 1</div>
+                    </div>
+                    <div class="scorer-goals">6</div>
+                </div>
+
+                <!-- Rank 9 -->
+                <div class="scorer-card" onclick="showPlayerDetail('Aliano', 6, 2)">
+                    <div class="scorer-rank">9</div>
+                    <div class="scorer-avatar">
+                        👤
+                        <div class="team-badge">🔵</div>
+                    </div>
+                    <div class="scorer-info">
+                        <div class="scorer-name">Aliano</div>
+                        <div class="scorer-stats">Penalty goals: 2</div>
+                    </div>
+                    <div class="scorer-goals">6</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <a href="#" class="nav-item active" onclick="changeNav(event, 'home')">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">Home</div>
+            </a>
+            <a href="#" class="nav-item" onclick="changeNav(event, 'live')">
+                <div class="nav-icon">📹</div>
+                <div class="nav-label">Live</div>
+            </a>
+            <a href="#" class="nav-item" onclick="changeNav(event, 'league')">
+                <div class="nav-icon">🏆</div>
+                <div class="nav-label">League</div>
+            </a>
+            <a href="#" class="nav-item" onclick="changeNav(event, 'more')">
+                <div class="nav-icon">⋮</div>
+                <div class="nav-label">More</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-info" id="modalInfo"></div>
+            <button class="modal-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function changeNav(e, nav) {
+            e.preventDefault();
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            console.log('Nav:', nav);
+        }
+
+        function changeTab(e, tab) {
+            e.preventDefault();
+            document.querySelectorAll('.tab').forEach(i => i.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            console.log('Tab:', tab);
+        }
+
+        function toggleMenu() {
+            alert('Menu opened');
+        }
+
+        function showPlayerDetail(name, goals, penalties) {
+            document.getElementById('modalTitle').textContent = name;
+            document.getElementById('modalInfo').textContent = `Total Goals: ${goals}\nPenalty Goals: ${penalties}\nOpen Play Goals: ${goals - penalties}`;
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        document.getElementById('modal').onclick = function(e) {
+            if(e.target === this) closeModal();
+        };
+    </script>
+</body>
+</html>

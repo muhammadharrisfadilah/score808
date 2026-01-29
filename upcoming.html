@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upcoming Matches</title>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <style>
+        /* Mobile Only Warning */
+        @media (min-width: 431px) {
+            body::before {
+                content: "Please view on mobile device";
+                position: fixed;
+                top: 50%; left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0,0,0,0.95);
+                color: #00ff88;
+                padding: 20px 30px;
+                border-radius: 15px;
+                font-weight: bold;
+                z-index: 10000;
+                border: 2px solid #00ff88;
+            }
+            body > * { opacity: 0.2; }
+        }
+        
+        /* Custom Styles */
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        }
+        
+        .bg-gradient-header {
+            background: linear-gradient(180deg, rgba(139,0,0,0.95) 0%, rgba(10,10,10,0.98) 100%);
+        }
+        
+        .bg-gradient-card {
+            background: linear-gradient(145deg, #1a1a1a 0%, #222 100%);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .bg-gradient-match {
+            background: linear-gradient(145deg, #222 0%, #2a2a2a 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .bg-gradient-stats {
+            background: linear-gradient(135deg, rgba(139,0,0,0.2) 0%, rgba(0,255,136,0.05) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .bg-gradient-nav {
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .text-gradient-accent {
+            background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .text-gradient-yellow {
+            background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .border-gradient {
+            border: 1px solid transparent;
+            background: linear-gradient(#1a1a1a, #1a1a1a) padding-box,
+                        linear-gradient(135deg, #00ff88, #8b0000) border-box;
+        }
+        
+        .match-time-badge {
+            background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+            color: #000;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 10px rgba(0, 255, 136, 0.2);
+        }
+        
+        .league-count-badge {
+            background: linear-gradient(135deg, #8b0000 0%, #660000 100%);
+            color: white;
+            font-weight: 800;
+            box-shadow: 0 2px 8px rgba(139, 0, 0, 0.3);
+        }
+        
+        .status-badge {
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            font-weight: 700;
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fadeInUp {
+            animation: fadeInUp 0.3s ease-out;
+        }
+        
+        .hover-lift {
+            transition: all 0.2s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Hide scrollbar */
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gradient-primary text-white min-h-screen max-w-[430px] mx-auto font-sans relative overflow-x-hidden">
+    
+    <!-- Header -->
+    <header class="fixed top-0 w-full max-w-[430px] h-48 bg-gradient-header z-50">
+        <div class="flex items-center justify-between px-5 pt-12">
+            <button class="w-11 h-11 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 transition-all duration-200 flex items-center justify-center">
+                <div class="space-y-1">
+                    <div class="w-5 h-0.5 bg-white"></div>
+                    <div class="w-5 h-0.5 bg-white"></div>
+                    <div class="w-5 h-0.5 bg-white"></div>
+                </div>
+            </button>
+            
+            <div class="text-xl font-black tracking-wider">
+                <span class="text-gradient-accent">LIVE</span>
+                <span class="text-white">SCORE</span>
+            </div>
+            
+            <button class="w-11 h-11 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 transition-all duration-200 flex items-center justify-center text-lg">
+                🔍
+            </button>
+        </div>
+        
+        <!-- Date Selector -->
+        <div class="flex items-center justify-center gap-4 px-5 pt-6">
+            <button id="prevDate" class="w-9 h-9 rounded-lg bg-white/5 hover:bg-white/10 active:scale-95 transition-all duration-200 flex items-center justify-center text-sm">
+                ◀
+            </button>
+            
+            <div class="text-center">
+                <div id="dateText" class="text-lg font-bold tracking-tight">Today</div>
+                <div id="dateSub" class="text-xs text-gray-300 mt-1 font-medium"></div>
+            </div>
+            
+            <button id="nextDate" class="w-9 h-9 rounded-lg bg-white/5 hover:bg-white/10 active:scale-95 transition-all duration-200 flex items-center justify-center text-sm">
+                ▶
+            </button>
+        </div>
+        
+        <!-- Today Button -->
+        <button id="todayBtn" class="block mx-auto mt-4 text-xs font-medium px-4 py-1.5 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 transition-all duration-200">
+            Jump to Today
+        </button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="pt-48 px-5 pb-28 h-screen overflow-y-auto no-scrollbar">
+        <!-- Stats Bar -->
+        <div class="bg-gradient-stats rounded-2xl p-4 mb-8 animate-fadeInUp">
+            <div class="flex justify-between items-center">
+                <div class="text-center flex-1">
+                    <div id="totalMatches" class="text-2xl font-black text-gradient-accent">0</div>
+                    <div class="text-xs text-gray-400 font-medium mt-1">Matches</div>
+                </div>
+                
+                <div class="w-px h-8 bg-gradient-to-b from-transparent via-gray-700 to-transparent"></div>
+                
+                <div class="text-center flex-1">
+                    <div id="totalLeagues" class="text-2xl font-black text-gradient-yellow">0</div>
+                    <div class="text-xs text-gray-400 font-medium mt-1">Leagues</div>
+                </div>
+                
+                <div class="w-px h-8 bg-gradient-to-b from-transparent via-gray-700 to-transparent"></div>
+                
+                <div class="text-center flex-1">
+                    <div id="featuredLeagues" class="text-2xl font-black">0</div>
+                    <div class="text-xs text-gray-400 font-medium mt-1">Featured</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Matches Container -->
+        <div id="matchesContainer" class="space-y-6"></div>
+        
+        <!-- Toggle Other Leagues Button -->
+        <button id="toggleBtn" class="hidden w-full mt-8 py-3.5 rounded-xl border-gradient bg-gradient-card hover:bg-[#252525] active:scale-[0.98] transition-all duration-200 font-bold">
+            Show Other Leagues
+        </button>
+    </main>
+
+    <!-- Navigation -->
+    <nav class="fixed bottom-0 w-full max-w-[430px] h-20 bg-gradient-nav z-50">
+        <div class="flex justify-around items-center h-full px-2">
+            <a href="index.html" class="flex flex-col items-center justify-center p-2.5 rounded-xl hover:bg-white/5 active:scale-95 transition-all duration-200 group">
+                <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">🏠</div>
+                <div class="text-[10px] font-bold text-yellow">Home</div>
+            </a>
+            
+            <a href="bottom-live.html" class="flex flex-col items-center justify-center p-2.5 rounded-xl hover:bg-white/5 active:scale-95 transition-all duration-200 group">
+                <div class="text-2xl mb-1 group-hover:scale-110 transition-transform relative">
+                    📡
+                    <div class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                </div>
+                <div class="text-[10px] font-medium">Live</div>
+            </a>
+            
+            <a href="league.html" class="flex flex-col items-center justify-center p-2.5 rounded-xl hover:bg-white/5 active:scale-95 transition-all duration-200 group">
+                <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">🏆</div>
+                <div class="text-[10px] font-medium">League</div>
+            </a>
+            
+            <a href="upcoming.html" class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-white/5 active:scale-95 transition-all duration-200 group">
+                <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">📅</div>
+                <div class="text-[10px] font-bold text-[#00ff88]">Upcoming</div>
+            </a>
+            
+            <a href="bottom-more.html" class="flex flex-col items-center justify-center p-2.5 rounded-xl hover:bg-white/5 active:scale-95 transition-all duration-200 group">
+                <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">⋯</div>
+                <div class="text-[10px] font-medium">More</div>
+            </a>
+        </div>
+    </nav>
+
+<script>
+// ========== CONFIG & STATE ==========
+const API_BASE = 'https://www.fotmob.com/api/data';
+const CACHE_TIME = 300000;
+
+const state = {
+    date: new Date(),
+    featuredLeagueIds: [],
+    cache: new Map(),
+    showOtherLeagues: false
+};
+
+// ========== UTILITIES ==========
+function getDateDisplay(date) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const target = new Date(date);
+    target.setHours(0, 0, 0, 0);
+    
+    const diff = Math.floor((target - today) / 86400000);
+    
+    if (diff === 0) return { main: 'TODAY', sub: '' };
+    if (diff === 1) return { main: 'TOMORROW', sub: '' };
+    if (diff === -1) return { main: 'YESTERDAY', sub: '' };
+    
+    const main = target.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+    }).toUpperCase();
+    
+    let sub = '';
+    if (diff > 1) sub = `In ${diff} days`;
+    if (diff < -1) sub = `${Math.abs(diff)} days ago`;
+    
+    return { main, sub };
+}
+
+function getDateString(date) {
+    return date.toISOString().slice(0,10).replace(/-/g,'');
+}
+
+function getImageUrl(type, id) {
+    return `https://images.fotmob.com/image_resources/logo/${type}logo/${id}.png`;
+}
+
+function getMatchTime(timeStr) {
+    return timeStr ? timeStr.split(' ')[1] : 'TBD';
+}
+
+// ========== CACHE MANAGEMENT ==========
+function getCache(key) {
+    const item = state.cache.get(key);
+    if (!item) return null;
+    
+    if (Date.now() - item.time > CACHE_TIME) {
+        state.cache.delete(key);
+        return null;
+    }
+    
+    return item.data;
+}
+
+function setCache(key, data) {
+    state.cache.set(key, { data, time: Date.now() });
+}
+
+// ========== API REQUESTS ==========
+async function fetchWithCache(endpoint) {
+    const cached = getCache(endpoint);
+    if (cached) return cached;
+    
+    try {
+        const response = await fetch(`${API_BASE}/${endpoint}`, {
+            headers: { 'Accept': 'application/json' }
+        });
+        
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const data = await response.json();
+        setCache(endpoint, data);
+        return data;
+    } catch (error) {
+        console.error('API Error:', error);
+        return null;
+    }
+}
+
+async function loadFeaturedLeagues() {
+    if (state.featuredLeagueIds.length > 0) return;
+    
+    const data = await fetchWithCache('allLeagues?locale=en&ccode3=IDN');
+    if (data?.popular) {
+        state.featuredLeagueIds = data.popular.slice(0, 8).map(l => l.id);
+    }
+}
+
+async function loadMatches() {
+    // Show loading
+    showLoading();
+    
+    // Update date display
+    updateDateDisplay();
+    
+    // Load featured leagues
+    await loadFeaturedLeagues();
+    
+    // Fetch matches for current date
+    const dateStr = getDateString(state.date);
+    const data = await fetchWithCache(`matches?date=${dateStr}&timezone=Asia%2FBangkok&ccode3=IDN`);
+    
+    if (!data?.leagues) {
+        showEmptyState();
+        return;
+    }
+    
+    renderMatches(data.leagues);
+}
+
+// ========== UI RENDERING ==========
+function showLoading() {
+    document.getElementById('matchesContainer').innerHTML = `
+        <div class="flex flex-col items-center justify-center py-20">
+            <div class="relative w-16 h-16 mb-4">
+                <div class="absolute inset-0 border-4 border-[#00ff88]/10 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-t-[#00ff88] border-transparent rounded-full animate-spin"></div>
+            </div>
+            <div class="text-sm text-gray-400 font-medium">Loading upcoming matches...</div>
+        </div>
+    `;
+}
+
+function showEmptyState() {
+    document.getElementById('matchesContainer').innerHTML = `
+        <div class="text-center py-20 animate-fadeInUp">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#00ff88]/10 to-transparent flex items-center justify-center">
+                <div class="text-4xl opacity-50">📅</div>
+            </div>
+            <div class="text-lg font-bold mb-2">No Matches Scheduled</div>
+            <div class="text-sm text-gray-400">Try selecting a different date</div>
+        </div>
+    `;
+    
+    updateStats(0, 0, 0);
+    document.getElementById('toggleBtn').classList.add('hidden');
+}
+
+function updateDateDisplay() {
+    const { main, sub } = getDateDisplay(state.date);
+    document.getElementById('dateText').textContent = main;
+    document.getElementById('dateSub').textContent = sub;
+}
+
+function updateStats(matches, leagues, featured) {
+    document.getElementById('totalMatches').textContent = matches;
+    document.getElementById('totalLeagues').textContent = leagues;
+    document.getElementById('featuredLeagues').textContent = featured;
+}
+
+function renderMatchCard(match, index) {
+    const time = getMatchTime(match.time);
+    
+    return `
+        <div class="bg-gradient-match rounded-xl p-4 hover-lift animate-fadeInUp" 
+             style="animation-delay: ${index * 50}ms"
+             onclick="viewMatch('${match.id}')">
+            <div class="flex items-center justify-between">
+                <!-- Home Team -->
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-900 to-black flex items-center justify-center overflow-hidden border border-gray-800">
+                        <img src="${getImageUrl('team', match.home.id)}" 
+                             alt="${match.home.name}"
+                             class="w-8 h-8"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                        <div class="hidden items-center justify-center text-lg">⚽</div>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="font-bold text-sm truncate">${match.home.name}</div>
+                        <div class="text-xs text-gray-400 mt-0.5">Home</div>
+                    </div>
+                </div>
+                
+                <!-- Match Info -->
+                <div class="flex flex-col items-center mx-2">
+                    <div class="match-time-badge px-4 py-1.5 rounded-lg font-black text-sm mb-1.5">${time}</div>
+                    <div class="status-badge text-[10px] px-2 py-0.5 rounded">UPCOMING</div>
+                </div>
+                
+                <!-- Away Team -->
+                <div class="flex items-center gap-3 flex-1 min-w-0 justify-end">
+                    <div class="min-w-0 text-right">
+                        <div class="font-bold text-sm truncate">${match.away.name}</div>
+                        <div class="text-xs text-gray-400 mt-0.5">Away</div>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-900 to-black flex items-center justify-center overflow-hidden border border-gray-800">
+                        <img src="${getImageUrl('team', match.away.id)}" 
+                             alt="${match.away.name}"
+                             class="w-8 h-8"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                        <div class="hidden items-center justify-center text-lg">⚽</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderLeagueCard(league, isFeatured, index) {
+    const matchesHtml = league.matches.map((match, idx) => renderMatchCard(match, idx)).join('');
+    
+    return `
+        <div class="animate-fadeInUp" style="animation-delay: ${index * 100}ms">
+            <div class="bg-gradient-card rounded-2xl p-5 hover-lift">
+                <!-- League Header -->
+                <div class="flex items-center justify-between mb-4 cursor-pointer" onclick="toggleLeague(this)">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-900 to-black flex items-center justify-center overflow-hidden border border-gray-800">
+                            <img src="${getImageUrl('league', league.id)}" 
+                                 alt="${league.name}"
+                                 class="w-7 h-7"
+                                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                            <div class="hidden items-center justify-center text-sm">🏆</div>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="font-bold text-base truncate">${league.name}</div>
+                            <div class="text-xs text-gray-400 truncate mt-0.5">${league.country || ''}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <div class="league-count-badge text-xs px-3 py-1 rounded-full">${league.matches.length}</div>
+                        <div class="text-gray-400 transition-transform duration-300 text-sm">▼</div>
+                    </div>
+                </div>
+                
+                <!-- Matches Container -->
+                <div class="hidden space-y-3">${matchesHtml}</div>
+            </div>
+        </div>
+    `;
+}
+
+function renderMatches(leaguesData) {
+    // Filter upcoming matches
+    const upcomingLeagues = leaguesData
+        .map(league => ({
+            ...league,
+            matches: (league.matches || []).filter(match => !match.status?.started)
+        }))
+        .filter(league => league.matches.length > 0);
+    
+    if (upcomingLeagues.length === 0) {
+        showEmptyState();
+        return;
+    }
+    
+    // Separate featured and other leagues
+    const featured = upcomingLeagues.filter(league => 
+        state.featuredLeagueIds.includes(league.id)
+    );
+    
+    const other = upcomingLeagues.filter(league => 
+        !state.featuredLeagueIds.includes(league.id)
+    );
+    
+    // Update stats
+    const totalMatches = upcomingLeagues.reduce((sum, league) => sum + league.matches.length, 0);
+    updateStats(totalMatches, upcomingLeagues.length, featured.length);
+    
+    // Render featured leagues
+    let html = '';
+    
+    if (featured.length > 0) {
+        html += featured.map((league, idx) => renderLeagueCard(league, true, idx)).join('');
+    } else {
+        html += `
+            <div class="text-center py-10 text-gray-400">
+                <div class="text-lg mb-2">No Featured Matches</div>
+                <div class="text-sm">Check other leagues</div>
+            </div>
+        `;
+    }
+    
+    // Handle other leagues
+    const toggleBtn = document.getElementById('toggleBtn');
+    
+    if (other.length > 0) {
+        toggleBtn.classList.remove('hidden');
+        
+        if (state.showOtherLeagues) {
+            html += `
+                <div class="mt-8 pt-8 border-t border-gray-800">
+                    <div class="text-sm font-bold text-gray-400 mb-6 tracking-wider">OTHER LEAGUES (${other.length})</div>
+                    ${other.map((league, idx) => renderLeagueCard(league, false, idx)).join('')}
+                </div>
+            `;
+            toggleBtn.textContent = 'Hide Other Leagues';
+        } else {
+            toggleBtn.textContent = `Show ${other.length} Other Leagues`;
+        }
+    } else {
+        toggleBtn.classList.add('hidden');
+    }
+    
+    document.getElementById('matchesContainer').innerHTML = html;
+}
+
+// ========== UI INTERACTIONS ==========
+function toggleLeague(element) {
+    const matchesContainer = element.parentElement.querySelector('.space-y-3');
+    const arrow = element.querySelector('.text-gray-400');
+    
+    if (matchesContainer.classList.contains('hidden')) {
+        matchesContainer.classList.remove('hidden');
+        arrow.style.transform = 'rotate(180deg)';
+        arrow.style.color = '#00ff88';
+    } else {
+        matchesContainer.classList.add('hidden');
+        arrow.style.transform = 'rotate(0deg)';
+        arrow.style.color = '#9ca3af';
+    }
+}
+
+function toggleOtherLeagues() {
+    state.showOtherLeagues = !state.showOtherLeagues;
+    loadMatches();
+}
+
+function changeDate(days) {
+    const newDate = new Date(state.date);
+    newDate.setDate(newDate.getDate() + days);
+    state.date = newDate;
+    loadMatches();
+}
+
+function goToToday() {
+    const today = new Date();
+    if (state.date.toDateString() !== today.toDateString()) {
+        state.date = today;
+        loadMatches();
+    }
+}
+
+function viewMatch(matchId) {
+    window.location.href = `match-detail.html?id=${matchId}`;
+}
+
+// ========== INITIALIZATION ==========
+document.addEventListener('DOMContentLoaded', () => {
+    // Start with tomorrow
+    state.date.setDate(state.date.getDate() + 1);
+    
+    // Event listeners
+    document.getElementById('prevDate').onclick = () => changeDate(-1);
+    document.getElementById('nextDate').onclick = () => changeDate(1);
+    document.getElementById('todayBtn').onclick = goToToday;
+    document.getElementById('toggleBtn').onclick = toggleOtherLeagues;
+    
+    // Initial load
+    loadMatches();
+});
+
+// Refresh on visibility change
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) loadMatches();
+});
+</script>
+</body>
+</html>

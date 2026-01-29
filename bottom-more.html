@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>More</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --black: #000000;
+            --black-2: #090000;
+            --broom: #fff212;
+            --eerie-black: #1d1d1d;
+            --licorice: #191616;
+            --white: #ffffff;
+            --card-bg: #271f1ff0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(0deg, rgba(9, 0, 0, 1) 81%, rgba(111, 0, 0, 1) 100%);
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+            margin: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        html {
+            overflow-x: hidden;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            height: 98px;
+            z-index: 100;
+            background: linear-gradient(180deg, rgba(111, 0, 0, 1) 0%, rgba(9, 0, 0, 1) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 32px 30px;
+        }
+
+        .menu-icon, .search-icon {
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .menu-icon:hover, .search-icon:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .logo {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--white);
+        }
+
+        .main-content {
+            margin-top: 98px;
+            margin-bottom: 0;
+            padding: 30px 20px 80px;
+            height: calc(100vh - 98px);
+            overflow-y: scroll;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 12px;
+            font-weight: 200;
+            margin-bottom: 25px;
+            opacity: 0.8;
+        }
+
+        .settings-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 0;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .menu-item {
+            padding: 18px 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .menu-icon-wrapper {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .menu-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .menu-title {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .menu-description {
+            font-size: 8px;
+            font-weight: 200;
+            opacity: 0.7;
+        }
+
+        .about-section {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+        }
+
+        .about-logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            font-size: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.9;
+        }
+
+        .about-text {
+            font-size: 13px;
+            font-weight: 300;
+            margin-bottom: 8px;
+            opacity: 0.8;
+        }
+
+        .version-text {
+            font-size: 13px;
+            font-weight: 300;
+            opacity: 0.6;
+        }
+
+        .about-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 18px 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 25px;
+        }
+
+        .about-card:hover {
+            background: rgba(39, 31, 31, 1);
+            transform: translateY(-2px);
+        }
+
+        .about-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .about-content {
+            flex: 1;
+        }
+
+        .about-title {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .about-desc {
+            font-size: 8px;
+            font-weight: 200;
+            opacity: 0.7;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            height: 70px;
+            background: var(--licorice);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            padding: 0 10px;
+        }
+
+        .bottom-nav a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            padding: 8px 12px;
+        }
+
+        .nav-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-label {
+            font-size: 9px;
+            font-weight: 400;
+            color: var(--white);
+        }
+
+        .nav-item.active .nav-label {
+            color: var(--broom);
+            font-weight: 700;
+        }
+
+        @media (min-width: 431px) {
+            body {
+                box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="menu-icon" onclick="alert('Menu')">☰</div>
+        <div class="logo">LIVESCORE</div>
+        <div class="search-icon" onclick="alert('Search')">🔍</div>
+    </header>
+
+    <main class="main-content">
+        <div class="page-title">More</div>
+        <div class="page-subtitle">Setting & Information</div>
+
+        <div class="settings-card">
+            <div class="menu-item" onclick="downloadAPK()">
+                <div class="menu-icon-wrapper">📥</div>
+                <div class="menu-content">
+                    <div class="menu-title">Download APK</div>
+                    <div class="menu-description">Get the latest version</div>
+                </div>
+            </div>
+
+            <div class="menu-item" onclick="joinTelegram()">
+                <div class="menu-icon-wrapper">✈️</div>
+                <div class="menu-content">
+                    <div class="menu-title">Join Telegram</div>
+                    <div class="menu-description">Get Updates & Support</div>
+                </div>
+            </div>
+
+            <div class="menu-item" onclick="changeLanguage()">
+                <div class="menu-icon-wrapper">🌐</div>
+                <div class="menu-content">
+                    <div class="menu-title">Language</div>
+                    <div class="menu-description">Choose your language</div>
+                </div>
+            </div>
+
+            <div class="menu-item" onclick="openNotifications()">
+                <div class="menu-icon-wrapper">🔔</div>
+                <div class="menu-content">
+                    <div class="menu-title">Notifications</div>
+                    <div class="menu-description">Get match alerts</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="about-card" onclick="openAbout()">
+            <div class="about-icon">ℹ️</div>
+            <div class="about-content">
+                <div class="about-title">About Titik Sports</div>
+                <div class="about-desc">Learn more about us</div>
+            </div>
+        </div>
+
+        <div class="about-section">
+            <div class="about-logo">⚽</div>
+            <div class="about-text">All Sports, One Place</div>
+            <div class="version-text">Version 1.0.0</div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">Home</div>
+        </a>
+        <a href="live.html" class="nav-item">
+            <div class="nav-icon">📡</div>
+            <div class="nav-label">Live</div>
+        </a>
+        <a href="league.html" class="nav-item">
+            <div class="nav-icon">🏆</div>
+            <div class="nav-label">League</div>
+        </a>
+        <a href="more.html" class="nav-item active">
+            <div class="nav-icon">⋯</div>
+            <div class="nav-label">More</div>
+        </a>
+    </nav>
+
+    <script>
+        function downloadAPK() {
+            alert('Download APK\n\nRedirecting to download page...\n\nLatest Version: 1.0.0');
+            // In real app: window.location.href = 'https://yoursite.com/app.apk';
+        }
+
+        function joinTelegram() {
+            alert('Join Telegram\n\nOpening Telegram channel...\n\nGet live updates & support!');
+            // In real app: window.open('https://t.me/yoursportschannel', '_blank');
+        }
+
+        function changeLanguage() {
+            const languages = ['English', 'Indonesia', 'Español', 'Français', 'Deutsch', 'Português'];
+            const selected = prompt('Select Language:\n\n' + languages.map((lang, i) => `${i+1}. ${lang}`).join('\n'));
+            
+            if (selected) {
+                alert(`Language changed to: ${languages[parseInt(selected)-1] || 'English'}`);
+            }
+        }
+
+        function openNotifications() {
+            const option = confirm('Enable push notifications?\n\nYou will receive:\n- Live match updates\n- Score alerts\n- Match reminders');
+            
+            if (option) {
+                alert('✅ Notifications enabled!\n\nYou will now receive match alerts');
+            } else {
+                alert('❌ Notifications disabled');
+            }
+        }
+
+        function openAbout() {
+            alert('About Titik Sports\n\n' +
+                  '⚽ Your ultimate sports companion\n' +
+                  '📱 Live scores & updates\n' +
+                  '🏆 All leagues in one place\n' +
+                  '🌍 Global coverage\n\n' +
+                  'Version 1.0.0\n' +
+                  '© 2026 Titik Sports');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Match Details - Lineup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: white;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #000000;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 60px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #8B0000 0%, #5C0000 100%);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-btn {
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            text-decoration: none;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            flex: 1;
+        }
+
+        /* Video/Live Section */
+        .live-video {
+            background: #1a1a1a;
+            aspect-ratio: 16/9;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .live-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background-color: #ff6b00;
+            border-radius: 5px;
+            padding: 6px 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .live-indicator {
+            width: 6px;
+            height: 6px;
+            background-color: white;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .play-button {
+            width: 60px;
+            height: 60px;
+            background-color: #ff6b00;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .play-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Match Info */
+        .match-info {
+            background: linear-gradient(180deg, #2a0000 0%, #1a0000 100%);
+            padding: 20px;
+        }
+
+        .league-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .league-logo {
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .league-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .teams-score {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+        }
+
+        .team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .team-logo {
+            width: 50px;
+            height: 50px;
+            font-size: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .team-name {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .score {
+            font-size: 28px;
+            font-weight: 700;
+            padding: 0 30px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: #1a0000;
+            border-bottom: 1px solid #333;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #888;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+            text-decoration: none;
+        }
+
+        .tab.active {
+            color: white;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #ff6b00;
+        }
+
+        /* Lineup Content */
+        .lineup-content {
+            padding: 20px 16px;
+            background: #000000;
+        }
+
+        .lineup-section {
+            margin-bottom: 30px;
+        }
+
+        .lineup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .team-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .formation {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .field-container {
+            background: linear-gradient(180deg, rgba(139, 0, 0, 0.3) 0%, rgba(92, 0, 0, 0.3) 100%);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .field {
+            width: 100%;
+            aspect-ratio: 3/4;
+            background: linear-gradient(180deg, rgba(100, 30, 30, 0.4) 0%, rgba(60, 20, 20, 0.4) 100%);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .field-line {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .center-line {
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+        }
+
+        .center-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+        }
+
+        .penalty-box {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 18%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .penalty-top {
+            top: 0;
+            border-top: none;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+
+        .penalty-bottom {
+            bottom: 0;
+            border-bottom: none;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .player-dot {
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            background: white;
+            border: 2px solid #ff6b00;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .player-dot:active {
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .player-number {
+            font-size: 11px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .player-name-label {
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            font-weight: 600;
+            white-space: nowrap;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        /* Subs Section */
+        .subs-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .subs-container {
+            background: rgba(26, 26, 26, 0.5);
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .sub-player {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .sub-player:last-child {
+            border-bottom: none;
+        }
+
+        .sub-player:active {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .jersey-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sub-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0a0a0a;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 10px;
+            border-top: 1px solid #222;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            color: #888;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: #b8a600;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 340px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .modal-info {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .modal-btn {
+            background: #ff6b00;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .modal-btn:active {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <a href="#" class="back-btn" onclick="goBack(event)">←</a>
+            <div class="header-title">Match Details</div>
+        </div>
+
+        <!-- Live Video Section -->
+        <div class="live-video">
+            <div class="live-badge">
+                <div class="live-indicator"></div>
+                <span>LIVE</span>
+            </div>
+            <div class="play-button" onclick="playVideo()">▶</div>
+        </div>
+
+        <!-- Match Info -->
+        <div class="match-info">
+            <div class="league-badge">
+                <div class="league-logo">LL</div>
+                <div class="league-name">LALIGA</div>
+            </div>
+            <div class="teams-score">
+                <div class="team">
+                    <div class="team-logo">🔵🔴</div>
+                    <div class="team-name">Barcelona</div>
+                </div>
+                <div class="score">0 - 1</div>
+                <div class="team">
+                    <div class="team-logo">⚪</div>
+                    <div class="team-name">Real Madrid</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <a href="#" class="tab" onclick="changeTab(event, 'stats')">Statistic</a>
+            <a href="#" class="tab active" onclick="changeTab(event, 'lineup')">Lineup</a>
+            <a href="#" class="tab" onclick="changeTab(event, 'table')">Table</a>
+        </div>
+
+        <!-- Lineup Content -->
+        <div class="lineup-content">
+            <!-- Real Madrid -->
+            <div class="lineup-section">
+                <div class="lineup-header">
+                    <div class="team-title">Real Madrid</div>
+                    <div class="formation">4-2-3-1</div>
+                </div>
+                <div class="field-container">
+                    <div class="field">
+                        <div class="field-line center-line"></div>
+                        <div class="center-circle"></div>
+                        <div class="penalty-box penalty-top"></div>
+                        <div class="penalty-box penalty-bottom"></div>
+                        
+                        <!-- Players (4-2-3-1) -->
+                        <div class="player-dot" style="top: 8%; left: 50%;" onclick="showPlayer('Courtois', 'GK')">
+                            <span class="player-number">1</span>
+                            <span class="player-name-label">Courtois</span>
+                        </div>
+                        <div class="player-dot" style="top: 22%; left: 15%;" onclick="showPlayer('Mendy', 'LB')">
+                            <span class="player-number">23</span>
+                            <span class="player-name-label">Mendy</span>
+                        </div>
+                        <div class="player-dot" style="top: 22%; left: 38%;" onclick="showPlayer('Rudiger', 'CB')">
+                            <span class="player-number">4</span>
+                            <span class="player-name-label">Rudiger</span>
+                        </div>
+                        <div class="player-dot" style="top: 22%; left: 62%;" onclick="showPlayer('Militao', 'CB')">
+                            <span class="player-number">3</span>
+                            <span class="player-name-label">Militao</span>
+                        </div>
+                        <div class="player-dot" style="top: 22%; left: 85%;" onclick="showPlayer('Carvajal', 'RB')">
+                            <span class="player-number">2</span>
+                            <span class="player-name-label">Carvajal</span>
+                        </div>
+                        <div class="player-dot" style="top: 42%; left: 35%;" onclick="showPlayer('Camavinga', 'CDM')">
+                            <span class="player-number">12</span>
+                            <span class="player-name-label">Camavinga</span>
+                        </div>
+                        <div class="player-dot" style="top: 42%; left: 65%;" onclick="showPlayer('Valverde', 'CDM')">
+                            <span class="player-number">15</span>
+                            <span class="player-name-label">Valverde</span>
+                        </div>
+                        <div class="player-dot" style="top: 62%; left: 20%;" onclick="showPlayer('Vinicius', 'LW')">
+                            <span class="player-number">7</span>
+                            <span class="player-name-label">Vinicius</span>
+                        </div>
+                        <div class="player-dot" style="top: 62%; left: 50%;" onclick="showPlayer('Bellingham', 'CAM')">
+                            <span class="player-number">5</span>
+                            <span class="player-name-label">Bellingham</span>
+                        </div>
+                        <div class="player-dot" style="top: 62%; left: 80%;" onclick="showPlayer('Rodrygo', 'RW')">
+                            <span class="player-number">11</span>
+                            <span class="player-name-label">Rodrygo</span>
+                        </div>
+                        <div class="player-dot" style="top: 85%; left: 50%;" onclick="showPlayer('Benzema', 'ST')">
+                            <span class="player-number">9</span>
+                            <span class="player-name-label">Benzema</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subs-title">Subs</div>
+                <div class="subs-container">
+                    <div class="sub-player" onclick="showPlayer('Ardaguler', 'Midfielder')">
+                        <div class="jersey-icon">👕</div>
+                        <div class="sub-name">Ardaguler</div>
+                    </div>
+                    <div class="sub-player" onclick="showPlayer('Kroos', 'Midfielder')">
+                        <div class="jersey-icon">👕</div>
+                        <div class="sub-name">Kroos</div>
+                    </div>
+                    <div class="sub-player" onclick="showPlayer('Carvajal', 'Defender')">
+                        <div class="jersey-icon">👕</div>
+                        <div class="sub-name">Carvajal</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barcelona -->
+            <div class="lineup-section">
+                <div class="lineup-header">
+                    <div class="team-title">Barcelona</div>
+                    <div class="formation">4-3-3</div>
+                </div>
+                <div class="field-container">
+                    <div class="field">
+                        <div class="field-line center-line"></div>
+                        <div class="center-circle"></div>
+                        <div class="penalty-box penalty-top"></div>
+                        <div class="penalty-box penalty-bottom"></div>
+                        
+                        <!-- Players (4-3-3) -->
+                        <div class="player-dot" style="top: 8%; left: 50%;" onclick="showPlayer('Ter Stegen', 'GK')">
+                            <span class="player-number">1</span>
+                            <span class="player-name-label">Mbappé</span>
+                        </div>
+                        <div class="player-dot" style="top: 22%; left: 15%;" onclick="showPlayer('Balde', 'LB')">
+                            <span class="player-number">3</span>
+                            <span class="player-name-label">Balde</span>
+                        </div>
+                        <div class="player-dot" style="top: 22%; left: 38%;" onclick="showPlayer('Araujo', 'CB')">
+                            <span class="player-number">4</span>
+                            <span class="player-name-label">Araujo</span>
+                        </div>
+                        <div class="player-dot" style="top: 22%; left: 62%;" onclick="showPlayer('Kounde', 'CB')">
+                            <span class="player-number">23</span>
+                            <span class="player-name-label">Kounde</span>
+                        </div>
+                        <div class="player-dot" style="top: 22%; left: 85%;" onclick="showPlayer('Cancelo', 'RB')">
+                            <span class="player-number">2</span>
+                            <span class="player-name-label">Cancelo</span>
+                        </div>
+                        <div class="player-dot" style="top: 48%; left: 25%;" onclick="showPlayer('De Jong', 'CM')">
+                            <span class="player-number">21</span>
+                            <span class="player-name-label">De Jong</span>
+                        </div>
+                        <div class="player-dot" style="top: 48%; left: 50%;" onclick="showPlayer('Gavi', 'CM')">
+                            <span class="player-number">6</span>
+                            <span class="player-name-label">Gavi</span>
+                        </div>
+                        <div class="player-dot" style="top: 48%; left: 75%;" onclick="showPlayer('Pedri', 'CM')">
+                            <span class="player-number">8</span>
+                            <span class="player-name-label">Pedri</span>
+                        </div>
+                        <div class="player-dot" style="top: 78%; left: 20%;" onclick="showPlayer('Torres', 'LW')">
+                            <span class="player-number">7</span>
+                            <span class="player-name-label">Torres</span>
+                        </div>
+                        <div class="player-dot" style="top: 78%; left: 50%;" onclick="showPlayer('Lewandowski', 'ST')">
+                            <span class="player-number">9</span>
+                            <span class="player-name-label">Lewandowski</span>
+                        </div>
+                        <div class="player-dot" style="top: 78%; left: 80%;" onclick="showPlayer('Raphinha', 'RW')">
+                            <span class="player-number">11</span>
+                            <span class="player-name-label">Raphinha</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subs-title">Subs</div>
+                <div class="subs-container">
+                    <div class="sub-player" onclick="showPlayer('Rasford', 'Forward')">
+                        <div class="jersey-icon">👕</div>
+                        <div class="sub-name">Rasford</div>
+                    </div>
+                    <div class="sub-player" onclick="showPlayer('Yamal', 'Forward')">
+                        <div class="jersey-icon">👕</div>
+                        <div class="sub-name">Yamal</div>
+                    </div>
+                    <div class="sub-player" onclick="showPlayer('Rapinha', 'Forward')">
+                        <div class="jersey-icon">👕</div>
+                        <div class="sub-name">Rapinha</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <a href="#" class="nav-item active" onclick="changeNav(event, 'home')">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">Home</div>
+            </a>
+            <a href="#" class="nav-item" onclick="changeNav(event, 'live')">
+                <div class="nav-icon">📹</div>
+                <div class="nav-label">Live</div>
+            </a>
+            <a href="#" class="nav-item" onclick="changeNav(event, 'league')">
+                <div class="nav-icon">🏆</div>
+                <div class="nav-label">League</div>
+            </a>
+            <a href="#" class="nav-item" onclick="changeNav(event, 'more')">
+                <div class="nav-icon">⋮</div>
+                <div class="nav-label">More</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-info" id="modalInfo"></div>
+            <button class="modal-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function changeNav(e, nav) {
+            e.preventDefault();
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            console.log('Nav:', nav);
+        }
+
+        function changeTab(e, tab) {
+            e.preventDefault();
+            document.querySelectorAll('.tab').forEach(i => i.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            console.log('Tab:', tab);
+        }
+
+        function goBack(e) {
+            e.preventDefault();
+            console.log('Back');
+        }
+
+        function playVideo() {
+            alert('Play video');
+        }
+
+        function showPlayer(name, pos) {
+            document.getElementById('modalTitle').textContent = name;
+            document.getElementById('modalInfo').textContent = `Position: ${pos}`;
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        document.getElementById('modal').onclick = function(e) {
+            if(e.target === this) closeModal();
+        };
+    </script>
+</body>
+</html>
