@@ -1,257 +1,312 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Match Details - Lineup</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
+// Render Lineup Tab - DENGAN UI/UX BARU YANG BAGUS (FIXED VERSION)
+window.renderLineupTab = async function(data, container) {
+    try {
+        // Show loading
+        container.innerHTML = '<div class="loading">Loading lineup...</div>';
+        
+        // Extract lineup data
+        const lineupData = extractLineupData(data);
+        
+        // If no lineup data
+        if (!lineupData) {
+            return renderNoLineupAvailable(data);
         }
+        
+        const homeTeam = lineupData.homeTeam || {};
+        const awayTeam = lineupData.awayTeam || {};
+        
+        // Render with new UI/UX design
+        const html = `
+            <div class="lineup-container-new">
+                ${renderTeamLineupNew(homeTeam, 'home', data)}
+                ${renderTeamLineupNew(awayTeam, 'away', data)}
+            </div>
+        `;
+        
+        container.innerHTML = html;
+        
+        // Add CSS styles
+        addLineupStylesToDocument();
+        
+    } catch (error) {
+        console.error('Error rendering lineup tab:', error);
+        container.innerHTML = renderLineupError(error);
+    }
+};
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #000000;
-            min-height: 100vh;
-            overflow-x: hidden;
-            color: white;
+// Extract lineup data
+function extractLineupData(data) {
+    // Try different data locations
+    if (data.content && data.content.lineup) {
+        return data.content.lineup;
+    }
+    
+    if (data.lineup) {
+        return data.lineup;
+    }
+    
+    if (data.teams) {
+        return {
+            homeTeam: data.teams.home,
+            awayTeam: data.teams.away
+        };
+    }
+    
+    return null;
+}
+
+// Render team lineup with new UI/UX
+function renderTeamLineupNew(teamData, teamType, matchData) {
+    const teamName = teamData.name || 
+                   (teamType === 'home' ? (matchData.general && matchData.general.homeTeam ? matchData.general.homeTeam.name : 'Home Team') : 
+                                          (matchData.general && matchData.general.awayTeam ? matchData.general.awayTeam.name : 'Away Team'));
+    
+    const formation = teamData.formation || '4-3-3';
+    
+    // Extract players
+    const players = teamData.players || teamData.starters || teamData.lineup || [];
+    const substitutes = teamData.substitutes || teamData.subs || [];
+    
+    // Position players based on formation
+    const positionedPlayers = positionPlayers(players, formation);
+    
+    return `
+        <div class="lineup-section-new">
+            <div class="lineup-header-new">
+                <div class="team-title-new">${escapeHTML(teamName)}</div>
+                <div class="formation-new">${formation}</div>
+            </div>
+            
+            <div class="field-container-new">
+                <div class="field-new">
+                    <!-- Field lines -->
+                    <div class="field-line-new center-line-new"></div>
+                    <div class="center-circle-new"></div>
+                    <div class="penalty-box-new penalty-top-new"></div>
+                    <div class="penalty-box-new penalty-bottom-new"></div>
+                    
+                    <!-- Players -->
+                    ${positionedPlayers.map(player => renderPlayerDot(player)).join('')}
+                </div>
+            </div>
+            
+            <!-- Substitutes -->
+            ${substitutes.length > 0 ? `
+                <div class="subs-title-new">Substitutes</div>
+                <div class="subs-container-new">
+                    ${substitutes.slice(0, 5).map(sub => renderSubstituteItem(sub)).join('')}
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+// Position players on field based on formation
+function positionPlayers(players, formation) {
+    const positions = getFormationPositions(formation);
+    
+    return players.slice(0, 11).map((player, index) => {
+        const pos = positions[index] || { top: 50, left: 50 };
+        
+        return {
+            ...player,
+            position: pos,
+            displayName: getShortPlayerName(player),
+            number: player.shirtNumber || player.jerseyNumber || player.number || (index + 1)
+        };
+    });
+}
+
+// Get positions for different formations
+function getFormationPositions(formation) {
+    const formations = {
+        '4-3-3': [
+            { top: 8, left: 50 }, // GK
+            { top: 22, left: 15 }, // LB
+            { top: 22, left: 38 }, // LCB
+            { top: 22, left: 62 }, // RCB
+            { top: 22, left: 85 }, // RB
+            { top: 48, left: 25 }, // LCM
+            { top: 48, left: 50 }, // CM
+            { top: 48, left: 75 }, // RCM
+            { top: 78, left: 20 }, // LW
+            { top: 78, left: 50 }, // ST
+            { top: 78, left: 80 }  // RW
+        ],
+        '4-2-3-1': [
+            { top: 8, left: 50 }, // GK
+            { top: 22, left: 15 }, // LB
+            { top: 22, left: 38 }, // LCB
+            { top: 22, left: 62 }, // RCB
+            { top: 22, left: 85 }, // RB
+            { top: 42, left: 35 }, // LCDM
+            { top: 42, left: 65 }, // RCDM
+            { top: 62, left: 20 }, // LW
+            { top: 62, left: 50 }, // CAM
+            { top: 62, left: 80 }, // RW
+            { top: 85, left: 50 }  // ST
+        ],
+        '4-4-2': [
+            { top: 8, left: 50 }, // GK
+            { top: 22, left: 15 }, // LB
+            { top: 22, left: 38 }, // LCB
+            { top: 22, left: 62 }, // RCB
+            { top: 22, left: 85 }, // RB
+            { top: 45, left: 15 }, // LM
+            { top: 45, left: 35 }, // LCM
+            { top: 45, left: 65 }, // RCM
+            { top: 45, left: 85 }, // RM
+            { top: 75, left: 35 }, // LS
+            { top: 75, left: 65 }  // RS
+        ],
+        '3-5-2': [
+            { top: 8, left: 50 }, // GK
+            { top: 22, left: 25 }, // LCB
+            { top: 22, left: 50 }, // CB
+            { top: 22, left: 75 }, // RCB
+            { top: 45, left: 10 }, // LWB
+            { top: 45, left: 30 }, // LDM
+            { top: 45, left: 50 }, // CDM
+            { top: 45, left: 70 }, // RDM
+            { top: 45, left: 90 }, // RWB
+            { top: 75, left: 40 }, // LS
+            { top: 75, left: 60 }  // RS
+        ]
+    };
+    
+    return formations[formation] || formations['4-3-3'];
+}
+
+// Render player dot on field
+function renderPlayerDot(player) {
+    const name = player.displayName || getShortPlayerName(player);
+    const number = player.number || '?';
+    
+    return `
+        <div class="player-dot-new" 
+             style="top: ${player.position.top}%; left: ${player.position.left}%;"
+             onclick="showPlayerInfoLineup(${JSON.stringify(player).replace(/"/g, '&quot;')})">
+            <span class="player-number-new">${number}</span>
+            <span class="player-name-label-new">${escapeHTML(name)}</span>
+        </div>
+    `;
+}
+
+// Render substitute item
+function renderSubstituteItem(player) {
+    const name = getShortPlayerName(player);
+    const number = player.shirtNumber || player.jerseyNumber || player.number || '?';
+    
+    return `
+        <div class="sub-player-new" onclick="showPlayerInfoLineup(${JSON.stringify(player).replace(/"/g, '&quot;')})">
+            <div class="jersey-icon-new">${number}</div>
+            <div class="sub-name-new">${escapeHTML(name)}</div>
+        </div>
+    `;
+}
+
+// Helper functions
+function getShortPlayerName(player) {
+    if (player.shortName) return player.shortName;
+    if (player.name) {
+        const parts = player.name.split(' ');
+        if (parts.length > 1) {
+            const lastName = parts[parts.length - 1];
+            const firstNameInitial = parts[0].charAt(0) + '.';
+            return lastName.length > 8 ? firstNameInitial + ' ' + lastName : player.name;
         }
+        return player.name.length > 10 ? player.name.substring(0, 10) + '...' : player.name;
+    }
+    return 'Player';
+}
 
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            background: #000000;
-            min-height: 100vh;
-            position: relative;
-            padding-bottom: 60px;
-        }
+function getPositionName(positionId) {
+    if (positionId == null) return 'Player';
+    
+    if (positionId === 0) return 'GK';
+    if (positionId === 1) return 'DEF';
+    if (positionId === 2) return 'MID';
+    if (positionId === 3) return 'FWD';
+    
+    return 'Player';
+}
 
-        /* Header */
-        .header {
-            background: linear-gradient(135deg, #8B0000 0%, #5C0000 100%);
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+// Render no lineup available
+function renderNoLineupAvailable(data) {
+    const homeTeam = data.general && data.general.homeTeam ? data.general.homeTeam.name : 'Home';
+    const awayTeam = data.general && data.general.awayTeam ? data.general.awayTeam.name : 'Away';
+    
+    return `
+        <div class="no-lineup-available-new">
+            <div class="no-lineup-icon-new">👥</div>
+            <h3>Lineup Not Available</h3>
+            <p>The lineup for ${escapeHTML(homeTeam)} vs ${escapeHTML(awayTeam)} is not currently available.</p>
+            <p class="lineup-info-new">Lineups are usually announced 1 hour before kickoff.</p>
+        </div>
+    `;
+}
 
-        .back-btn {
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            text-decoration: none;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+// Render lineup error
+function renderLineupError(error) {
+    return `
+        <div class="lineup-error-new">
+            <div class="error-icon-new">⚠️</div>
+            <h3>Error Loading Lineup</h3>
+            <p>${escapeHTML(error.message || 'Failed to load lineup')}</p>
+            <button onclick="retryLineupLoad()" class="retry-btn-new">
+                Try Again
+            </button>
+        </div>
+    `;
+}
 
-        .header-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: white;
-            flex: 1;
-        }
-
-        /* Video/Live Section */
-        .live-video {
-            background: #1a1a1a;
-            aspect-ratio: 16/9;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .live-badge {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            background-color: #ff6b00;
-            border-radius: 5px;
-            padding: 6px 14px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .live-indicator {
-            width: 6px;
-            height: 6px;
-            background-color: white;
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        .play-button {
-            width: 60px;
-            height: 60px;
-            background-color: #ff6b00;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            color: white;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .play-button:active {
-            transform: scale(0.95);
-        }
-
-        /* Match Info */
-        .match-info {
-            background: linear-gradient(180deg, #2a0000 0%, #1a0000 100%);
-            padding: 20px;
-        }
-
-        .league-badge {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-
-        .league-logo {
-            width: 24px;
-            height: 24px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 700;
-            color: #000;
-        }
-
-        .league-name {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .teams-score {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 10px;
-        }
-
-        .team {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
-        }
-
-        .team-logo {
-            width: 50px;
-            height: 50px;
-            font-size: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .team-name {
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        .score {
-            font-size: 28px;
-            font-weight: 700;
-            padding: 0 30px;
-        }
-
-        /* Tabs */
-        .tabs {
-            display: flex;
-            background: #1a0000;
-            border-bottom: 1px solid #333;
-        }
-
-        .tab {
-            flex: 1;
+// Add CSS styles for new lineup UI
+function addLineupStylesToDocument() {
+    // Check if styles already exist
+    if (document.getElementById('lineup-styles')) {
+        return;
+    }
+    
+    const style = document.createElement('style');
+    style.id = 'lineup-styles';
+    style.textContent = `
+        .lineup-container-new {
             padding: 16px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 600;
-            color: #888;
-            cursor: pointer;
-            position: relative;
-            transition: color 0.2s;
-            text-decoration: none;
-        }
-
-        .tab.active {
-            color: white;
-        }
-
-        .tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #ff6b00;
-        }
-
-        /* Lineup Content */
-        .lineup-content {
-            padding: 20px 16px;
             background: #000000;
         }
-
-        .lineup-section {
+        
+        .lineup-section-new {
             margin-bottom: 30px;
         }
-
-        .lineup-header {
+        
+        .lineup-header-new {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
         }
-
-        .team-title {
+        
+        .team-title-new {
             font-size: 16px;
             font-weight: 700;
+            color: white;
         }
-
-        .formation {
+        
+        .formation-new {
             font-size: 13px;
             color: #888;
+            font-weight: 600;
         }
-
-        .field-container {
+        
+        .field-container-new {
             background: linear-gradient(180deg, rgba(139, 0, 0, 0.3) 0%, rgba(92, 0, 0, 0.3) 100%);
             border: 1px solid #333;
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 20px;
         }
-
-        .field {
+        
+        .field-new {
             width: 100%;
             aspect-ratio: 3/4;
             background: linear-gradient(180deg, rgba(100, 30, 30, 0.4) 0%, rgba(60, 20, 20, 0.4) 100%);
@@ -260,20 +315,20 @@
             position: relative;
             overflow: hidden;
         }
-
-        .field-line {
+        
+        .field-line-new {
             position: absolute;
             background: rgba(255, 255, 255, 0.3);
         }
-
-        .center-line {
+        
+        .center-line-new {
             top: 50%;
             left: 0;
             right: 0;
             height: 1px;
         }
-
-        .center-circle {
+        
+        .center-circle-new {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -283,8 +338,8 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
         }
-
-        .penalty-box {
+        
+        .penalty-box-new {
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
@@ -293,22 +348,22 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 3px;
         }
-
-        .penalty-top {
+        
+        .penalty-top-new {
             top: 0;
             border-top: none;
             border-top-left-radius: 0;
             border-top-right-radius: 0;
         }
-
-        .penalty-bottom {
+        
+        .penalty-bottom-new {
             bottom: 0;
             border-bottom: none;
             border-bottom-left-radius: 0;
             border-bottom-right-radius: 0;
         }
-
-        .player-dot {
+        
+        .player-dot-new {
             position: absolute;
             width: 36px;
             height: 36px;
@@ -321,19 +376,20 @@
             justify-content: center;
             cursor: pointer;
             transition: transform 0.2s;
+            z-index: 10;
         }
-
-        .player-dot:active {
+        
+        .player-dot-new:active {
             transform: translate(-50%, -50%) scale(1.1);
         }
-
-        .player-number {
+        
+        .player-number-new {
             font-size: 11px;
             font-weight: 700;
             color: #000;
         }
-
-        .player-name-label {
+        
+        .player-name-label-new {
             position: absolute;
             bottom: -18px;
             left: 50%;
@@ -344,23 +400,24 @@
             background: rgba(0, 0, 0, 0.7);
             padding: 2px 6px;
             border-radius: 3px;
+            color: white;
         }
-
-        /* Subs Section */
-        .subs-title {
+        
+        .subs-title-new {
             font-size: 16px;
             font-weight: 700;
             margin-bottom: 12px;
+            color: white;
         }
-
-        .subs-container {
+        
+        .subs-container-new {
             background: rgba(26, 26, 26, 0.5);
             border: 1px solid #333;
             border-radius: 8px;
             overflow: hidden;
         }
-
-        .sub-player {
+        
+        .sub-player-new {
             display: flex;
             align-items: center;
             gap: 14px;
@@ -369,394 +426,221 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-
-        .sub-player:last-child {
+        
+        .sub-player-new:last-child {
             border-bottom: none;
         }
-
-        .sub-player:active {
+        
+        .sub-player-new:active {
             background: rgba(255, 255, 255, 0.05);
         }
-
-        .jersey-icon {
+        
+        .jersey-icon-new {
             width: 32px;
             height: 32px;
-            font-size: 28px;
+            background: #ff6b00;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: white;
         }
-
-        .sub-name {
+        
+        .sub-name-new {
             font-size: 14px;
             font-weight: 600;
+            color: white;
         }
-
-        /* Bottom Nav */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #0a0a0a;
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0 10px;
-            border-top: 1px solid #222;
-            z-index: 100;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            text-decoration: none;
-            color: #888;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .nav-item.active {
-            color: #b8a600;
-        }
-
-        .nav-icon {
-            font-size: 20px;
-        }
-
-        .nav-label {
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 200;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: #1a1a1a;
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 340px;
-            width: 100%;
+        
+        .no-lineup-available-new {
             text-align: center;
+            padding: 40px 20px;
+            color: white;
         }
-
-        .modal-title {
-            font-size: 20px;
-            font-weight: 700;
+        
+        .no-lineup-icon-new {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .no-lineup-available-new h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: white;
+        }
+        
+        .no-lineup-available-new p {
+            color: #888;
             margin-bottom: 12px;
-        }
-
-        .modal-info {
-            font-size: 14px;
-            color: #aaa;
-            margin-bottom: 24px;
             line-height: 1.5;
         }
-
-        .modal-btn {
+        
+        .lineup-info-new {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .lineup-error-new {
+            text-align: center;
+            padding: 40px 20px;
+            color: white;
+        }
+        
+        .lineup-error-new .error-icon-new {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #ef4444;
+        }
+        
+        .lineup-error-new h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: white;
+        }
+        
+        .lineup-error-new p {
+            color: #888;
+            margin-bottom: 20px;
+        }
+        
+        .retry-btn-new {
             background: #ff6b00;
             color: white;
             border: none;
-            padding: 12px 32px;
+            padding: 12px 24px;
             border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: opacity 0.2s;
         }
-
-        .modal-btn:active {
-            opacity: 0.8;
+        
+        .retry-btn-new:hover {
+            opacity: 0.9;
         }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <a href="#" class="back-btn" onclick="goBack(event)">←</a>
-            <div class="header-title">Match Details</div>
-        </div>
+    `;
+    
+    document.head.appendChild(style);
+}
 
-        <!-- Live Video Section -->
-        <div class="live-video">
-            <div class="live-badge">
-                <div class="live-indicator"></div>
-                <span>LIVE</span>
-            </div>
-            <div class="play-button" onclick="playVideo()">▶</div>
-        </div>
-
-        <!-- Match Info -->
-        <div class="match-info">
-            <div class="league-badge">
-                <div class="league-logo">LL</div>
-                <div class="league-name">LALIGA</div>
-            </div>
-            <div class="teams-score">
-                <div class="team">
-                    <div class="team-logo">🔵🔴</div>
-                    <div class="team-name">Barcelona</div>
-                </div>
-                <div class="score">0 - 1</div>
-                <div class="team">
-                    <div class="team-logo">⚪</div>
-                    <div class="team-name">Real Madrid</div>
+// Global functions for lineup
+window.showPlayerInfoLineup = function(player) {
+    const modal = document.getElementById('infoModal');
+    if (!modal) return;
+    
+    const name = player.name || 'Player';
+    const number = player.shirtNumber || player.jerseyNumber || player.number || '?';
+    const position = getPositionName(player.positionId || player.usualPlayingPositionId);
+    const team = player.teamName || 'Team';
+    
+    document.getElementById('modalTitle').textContent = name;
+    document.getElementById('modalInfo').innerHTML = `
+        <div class="player-info-modal">
+            <div class="player-info-header">
+                <div class="player-number-large">${number}</div>
+                <div>
+                    <div class="player-name-large">${escapeHTML(name)}</div>
+                    <div class="player-position-large">${escapeHTML(position)} • ${escapeHTML(team)}</div>
                 </div>
             </div>
+            
+            ${player.rating ? `
+                <div class="player-rating-info">
+                    <div class="rating-label">Rating</div>
+                    <div class="rating-value">${player.rating.toFixed(1)}</div>
+                </div>
+            ` : ''}
+            
+            ${player.age ? `
+                <div class="player-age-info">
+                    <div class="info-label">Age</div>
+                    <div class="info-value">${player.age} years</div>
+                </div>
+            ` : ''}
+            
+            ${player.countryName ? `
+                <div class="player-country-info">
+                    <div class="info-label">Nationality</div>
+                    <div class="info-value">${escapeHTML(player.countryName)}</div>
+                </div>
+            ` : ''}
         </div>
+        
+        <style>
+            .player-info-modal {
+                text-align: left;
+            }
+            
+            .player-info-header {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                margin-bottom: 20px;
+            }
+            
+            .player-number-large {
+                width: 50px;
+                height: 50px;
+                background: #ff6b00;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                font-weight: 700;
+                color: white;
+                flex-shrink: 0;
+            }
+            
+            .player-name-large {
+                font-size: 18px;
+                font-weight: 700;
+                margin-bottom: 4px;
+            }
+            
+            .player-position-large {
+                font-size: 14px;
+                color: #888;
+            }
+            
+            .player-rating-info,
+            .player-age-info,
+            .player-country-info {
+                display: flex;
+                justify-content: space-between;
+                padding: 12px 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .rating-label,
+            .info-label {
+                font-size: 14px;
+                color: #888;
+            }
+            
+            .rating-value {
+                font-size: 16px;
+                font-weight: 700;
+                color: #ff6b00;
+            }
+            
+            .info-value {
+                font-size: 14px;
+                color: white;
+            }
+        </style>
+    `;
+    
+    modal.classList.add('active');
+};
 
-        <!-- Tabs -->
-        <div class="tabs">
-            <a href="#" class="tab" onclick="changeTab(event, 'stats')">Statistic</a>
-            <a href="#" class="tab active" onclick="changeTab(event, 'lineup')">Lineup</a>
-            <a href="#" class="tab" onclick="changeTab(event, 'table')">Table</a>
-        </div>
-
-        <!-- Lineup Content -->
-        <div class="lineup-content">
-            <!-- Real Madrid -->
-            <div class="lineup-section">
-                <div class="lineup-header">
-                    <div class="team-title">Real Madrid</div>
-                    <div class="formation">4-2-3-1</div>
-                </div>
-                <div class="field-container">
-                    <div class="field">
-                        <div class="field-line center-line"></div>
-                        <div class="center-circle"></div>
-                        <div class="penalty-box penalty-top"></div>
-                        <div class="penalty-box penalty-bottom"></div>
-                        
-                        <!-- Players (4-2-3-1) -->
-                        <div class="player-dot" style="top: 8%; left: 50%;" onclick="showPlayer('Courtois', 'GK')">
-                            <span class="player-number">1</span>
-                            <span class="player-name-label">Courtois</span>
-                        </div>
-                        <div class="player-dot" style="top: 22%; left: 15%;" onclick="showPlayer('Mendy', 'LB')">
-                            <span class="player-number">23</span>
-                            <span class="player-name-label">Mendy</span>
-                        </div>
-                        <div class="player-dot" style="top: 22%; left: 38%;" onclick="showPlayer('Rudiger', 'CB')">
-                            <span class="player-number">4</span>
-                            <span class="player-name-label">Rudiger</span>
-                        </div>
-                        <div class="player-dot" style="top: 22%; left: 62%;" onclick="showPlayer('Militao', 'CB')">
-                            <span class="player-number">3</span>
-                            <span class="player-name-label">Militao</span>
-                        </div>
-                        <div class="player-dot" style="top: 22%; left: 85%;" onclick="showPlayer('Carvajal', 'RB')">
-                            <span class="player-number">2</span>
-                            <span class="player-name-label">Carvajal</span>
-                        </div>
-                        <div class="player-dot" style="top: 42%; left: 35%;" onclick="showPlayer('Camavinga', 'CDM')">
-                            <span class="player-number">12</span>
-                            <span class="player-name-label">Camavinga</span>
-                        </div>
-                        <div class="player-dot" style="top: 42%; left: 65%;" onclick="showPlayer('Valverde', 'CDM')">
-                            <span class="player-number">15</span>
-                            <span class="player-name-label">Valverde</span>
-                        </div>
-                        <div class="player-dot" style="top: 62%; left: 20%;" onclick="showPlayer('Vinicius', 'LW')">
-                            <span class="player-number">7</span>
-                            <span class="player-name-label">Vinicius</span>
-                        </div>
-                        <div class="player-dot" style="top: 62%; left: 50%;" onclick="showPlayer('Bellingham', 'CAM')">
-                            <span class="player-number">5</span>
-                            <span class="player-name-label">Bellingham</span>
-                        </div>
-                        <div class="player-dot" style="top: 62%; left: 80%;" onclick="showPlayer('Rodrygo', 'RW')">
-                            <span class="player-number">11</span>
-                            <span class="player-name-label">Rodrygo</span>
-                        </div>
-                        <div class="player-dot" style="top: 85%; left: 50%;" onclick="showPlayer('Benzema', 'ST')">
-                            <span class="player-number">9</span>
-                            <span class="player-name-label">Benzema</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="subs-title">Subs</div>
-                <div class="subs-container">
-                    <div class="sub-player" onclick="showPlayer('Ardaguler', 'Midfielder')">
-                        <div class="jersey-icon">👕</div>
-                        <div class="sub-name">Ardaguler</div>
-                    </div>
-                    <div class="sub-player" onclick="showPlayer('Kroos', 'Midfielder')">
-                        <div class="jersey-icon">👕</div>
-                        <div class="sub-name">Kroos</div>
-                    </div>
-                    <div class="sub-player" onclick="showPlayer('Carvajal', 'Defender')">
-                        <div class="jersey-icon">👕</div>
-                        <div class="sub-name">Carvajal</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Barcelona -->
-            <div class="lineup-section">
-                <div class="lineup-header">
-                    <div class="team-title">Barcelona</div>
-                    <div class="formation">4-3-3</div>
-                </div>
-                <div class="field-container">
-                    <div class="field">
-                        <div class="field-line center-line"></div>
-                        <div class="center-circle"></div>
-                        <div class="penalty-box penalty-top"></div>
-                        <div class="penalty-box penalty-bottom"></div>
-                        
-                        <!-- Players (4-3-3) -->
-                        <div class="player-dot" style="top: 8%; left: 50%;" onclick="showPlayer('Ter Stegen', 'GK')">
-                            <span class="player-number">1</span>
-                            <span class="player-name-label">Mbappé</span>
-                        </div>
-                        <div class="player-dot" style="top: 22%; left: 15%;" onclick="showPlayer('Balde', 'LB')">
-                            <span class="player-number">3</span>
-                            <span class="player-name-label">Balde</span>
-                        </div>
-                        <div class="player-dot" style="top: 22%; left: 38%;" onclick="showPlayer('Araujo', 'CB')">
-                            <span class="player-number">4</span>
-                            <span class="player-name-label">Araujo</span>
-                        </div>
-                        <div class="player-dot" style="top: 22%; left: 62%;" onclick="showPlayer('Kounde', 'CB')">
-                            <span class="player-number">23</span>
-                            <span class="player-name-label">Kounde</span>
-                        </div>
-                        <div class="player-dot" style="top: 22%; left: 85%;" onclick="showPlayer('Cancelo', 'RB')">
-                            <span class="player-number">2</span>
-                            <span class="player-name-label">Cancelo</span>
-                        </div>
-                        <div class="player-dot" style="top: 48%; left: 25%;" onclick="showPlayer('De Jong', 'CM')">
-                            <span class="player-number">21</span>
-                            <span class="player-name-label">De Jong</span>
-                        </div>
-                        <div class="player-dot" style="top: 48%; left: 50%;" onclick="showPlayer('Gavi', 'CM')">
-                            <span class="player-number">6</span>
-                            <span class="player-name-label">Gavi</span>
-                        </div>
-                        <div class="player-dot" style="top: 48%; left: 75%;" onclick="showPlayer('Pedri', 'CM')">
-                            <span class="player-number">8</span>
-                            <span class="player-name-label">Pedri</span>
-                        </div>
-                        <div class="player-dot" style="top: 78%; left: 20%;" onclick="showPlayer('Torres', 'LW')">
-                            <span class="player-number">7</span>
-                            <span class="player-name-label">Torres</span>
-                        </div>
-                        <div class="player-dot" style="top: 78%; left: 50%;" onclick="showPlayer('Lewandowski', 'ST')">
-                            <span class="player-number">9</span>
-                            <span class="player-name-label">Lewandowski</span>
-                        </div>
-                        <div class="player-dot" style="top: 78%; left: 80%;" onclick="showPlayer('Raphinha', 'RW')">
-                            <span class="player-number">11</span>
-                            <span class="player-name-label">Raphinha</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="subs-title">Subs</div>
-                <div class="subs-container">
-                    <div class="sub-player" onclick="showPlayer('Rasford', 'Forward')">
-                        <div class="jersey-icon">👕</div>
-                        <div class="sub-name">Rasford</div>
-                    </div>
-                    <div class="sub-player" onclick="showPlayer('Yamal', 'Forward')">
-                        <div class="jersey-icon">👕</div>
-                        <div class="sub-name">Yamal</div>
-                    </div>
-                    <div class="sub-player" onclick="showPlayer('Rapinha', 'Forward')">
-                        <div class="jersey-icon">👕</div>
-                        <div class="sub-name">Rapinha</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bottom Nav -->
-        <div class="bottom-nav">
-            <a href="#" class="nav-item active" onclick="changeNav(event, 'home')">
-                <div class="nav-icon">🏠</div>
-                <div class="nav-label">Home</div>
-            </a>
-            <a href="#" class="nav-item" onclick="changeNav(event, 'live')">
-                <div class="nav-icon">📹</div>
-                <div class="nav-label">Live</div>
-            </a>
-            <a href="#" class="nav-item" onclick="changeNav(event, 'league')">
-                <div class="nav-icon">🏆</div>
-                <div class="nav-label">League</div>
-            </a>
-            <a href="#" class="nav-item" onclick="changeNav(event, 'more')">
-                <div class="nav-icon">⋮</div>
-                <div class="nav-label">More</div>
-            </a>
-        </div>
-    </div>
-
-    <!-- Modal -->
-    <div class="modal" id="modal">
-        <div class="modal-content">
-            <div class="modal-title" id="modalTitle"></div>
-            <div class="modal-info" id="modalInfo"></div>
-            <button class="modal-btn" onclick="closeModal()">Close</button>
-        </div>
-    </div>
-
-    <script>
-        function changeNav(e, nav) {
-            e.preventDefault();
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-            console.log('Nav:', nav);
-        }
-
-        function changeTab(e, tab) {
-            e.preventDefault();
-            document.querySelectorAll('.tab').forEach(i => i.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-            console.log('Tab:', tab);
-        }
-
-        function goBack(e) {
-            e.preventDefault();
-            console.log('Back');
-        }
-
-        function playVideo() {
-            alert('Play video');
-        }
-
-        function showPlayer(name, pos) {
-            document.getElementById('modalTitle').textContent = name;
-            document.getElementById('modalInfo').textContent = `Position: ${pos}`;
-            document.getElementById('modal').classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('modal').classList.remove('active');
-        }
-
-        document.getElementById('modal').onclick = function(e) {
-            if(e.target === this) closeModal();
-        };
-    </script>
-</body>
-</html>
+window.retryLineupLoad = async function() {
+    const container = document.getElementById('lineupTab');
+    if (!container || !window.matchData) return;
+    
+    container.innerHTML = '<div class="loading">Retrying...</div>';
+    await window.renderLineupTab(window.matchData, container);
+};
